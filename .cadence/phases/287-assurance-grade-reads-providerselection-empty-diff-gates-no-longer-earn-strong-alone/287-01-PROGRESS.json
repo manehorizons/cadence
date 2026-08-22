@@ -1,0 +1,44 @@
+{
+  "draftId": "287-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Added AC-1/AC-2/AC-3/AC-4 regression tests to assurance-record.test.ts (renamed from a first attempt's non-numeric AC-K1..AC-K5 ids, which the draft parser and coverage scanner both require to be numeric -- see this DRAFT's As-built section); confirmed AC-1 red pre-fix. AC-5 test added to the existing assurance-record-corpus.test.ts per Boundaries (no new duplicate walker).",
+      "touchedFiles": [
+        ".claude/scheduled_tasks.lock",
+        ".claude/settings.json",
+        "docs/concepts.md",
+        "packages/core/src/gates/assurance-record.ts",
+        "packages/core/tests/gates/assurance-record-corpus.test.ts",
+        "packages/core/tests/gates/assurance-record.test.ts",
+        "packages/core/tests/services/settle.test.ts",
+        ".changeset/empty-diff-assurance-grade.md",
+        "docs/handoffs/HANDOFF-assurance-honesty-v1.62.0.md",
+        "docs/handoffs/HANDOFF-assurance-honesty.md",
+        "docs/handoffs/HANDOFF-dispatch-policy-contract.md",
+        "docs/handoffs/HANDOFF-v1.60-dispatch-release-and-coverage-determinism.md",
+        "docs/handoffs/HANDOFF-v1.62-record-reconciliation.md",
+        "docs/handoffs/HANDOFF-verifier-honesty-verify-premises.md"
+      ],
+      "updatedAt": "2026-08-22T00:52:42.591Z",
+      "execution": "inline",
+      "isolation": "none"
+    },
+    "T2": {
+      "status": "DONE_WITH_CONCERNS",
+      "notes": "Implemented hasRealVerifier fix reading gates[] directly (not verifierRollup), extended docstring for both 'strong' and 'mixed' branches (both read hasRealVerifier). AC-1/2/3/4 tests pass; dec-20260728-001 tripwire passes unmodified. DONE_WITH_CONCERNS: fixing this surfaced that a pre-existing settle.test.ts integration test (283-01/AC-2) was silently exercising the empty-diff hole via a test-harness artifact (no git init in fixture -> collectGitDiff always returns ''), requiring its expected assurance.overall to change from 'mixed' to 'weak' -- a correct, verified consequence of the fix, touching a file outside this DRAFT's named T2 scope. See dec-20260822-008/dec-20260822-009 for the ledger corrections this prompted, and this DRAFT's As-built section.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-22T00:52:42.798Z",
+      "execution": "inline",
+      "isolation": "none"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Added 287-01/AC-5 test to the existing assurance-record-corpus.test.ts, reusing its walkSummaryFiles helper: 0 of 298 historical SUMMARY.json gate entries carry providerSelection:'empty-diff', proving the D-Z predicate structurally cannot change any historical grade. Re-ran the existing 283-01/AC-5 drift-report test with the fix applied: 6/6 pass, 0 new drift beyond the committed whitelist. git status confirms no .cadence/phases/**/*-SUMMARY.json modified.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-22T00:52:42.979Z",
+      "execution": "inline",
+      "isolation": "none"
+    }
+  }
+}

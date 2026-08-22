@@ -2178,6 +2178,97 @@
       "kind": "note",
       "summary": "Reconciled duplicate: rec-20260821-003 (auto-filed by cadence settle's code-review-finding-to-recommendation mechanism) describes the identical defect (build-task.ts:287, false boundary-pattern-unmatched re-fire after an earlier task's wildcard match is subtracted from the delta) with independent corroboration — cadence-artifact evidence from phase 286-boundary-glob-expansion draft 286-01's SUMMARY. Absorbed here; rec-20260821-003 marked rejected as a duplicate.",
       "createdAt": "2026-08-21T22:46:40.003Z"
+    },
+    {
+      "id": "ev-20260821-005",
+      "recommendationId": "rec-20260807-005",
+      "kind": "note",
+      "summary": "Verified live 2026-08-21: packages/core/src/cli/commands/init.ts:481 writes coverageScheme: 'phase-qualified' as const unconditionally for every fresh cadence init (git blame: commit 90e3ed96, phase 239, 2026-07-30 -- predates this rec's own filing). packages/types/src/config.ts:583 confirms 'bare' is the deliberate defaultConfig back-compat literal for pre-existing/upgraded projects only. The rec's summary claim that 'bare' remains the default for every fresh cadence init is stale/incorrect; see dec-20260821-001 (supersedes dec-20260813-005, which checked plan.ts instead of cli/commands/init.ts). Remaining open question is narrower: whether/how pre-phase-239 projects migrate off 'bare', not whether fresh init should default to phase-qualified.",
+      "createdAt": "2026-08-21T02:24:23.699Z"
+    },
+    {
+      "id": "ev-20260821-006",
+      "recommendationId": "rec-20260815-005",
+      "kind": "note",
+      "summary": "HANDOFF-v1.62-record-reconciliation.md sec6 (Phase I): filed low, but treat as medium -- under dispatch-scoped block mode (phase 280) a wildcard files: declaration produces a hard refusal on correctly-scoped work, and phase 281's T6 already hit the warn-mode version live (declared .changeset/*.md, wrote exactly that file, got a files-outside-boundary anomaly anyway). Note for whoever specs this: cadence recommendation promote only mutates status/readiness (packages/core/src/services/recommendation-promote.ts), and no CLI/service path exists to change an existing rec's priority field -- verified by reading the promote service and grepping recommendation.ts's option set. Raising this rec's stored priority to medium would require a hand-edit of .cadence/intelligence/recommendations.json, which CLAUDE.md's sec7 ledger-write rule forbids. Leaving priority=low in the ledger; treat the severity as medium per this note until a priority-edit command exists or the rec is re-filed.",
+      "createdAt": "2026-08-21T02:24:38.980Z"
+    },
+    {
+      "id": "ev-20260821-007",
+      "recommendationId": "rec-20260821-004",
+      "kind": "note",
+      "summary": "ev-20260821-003 on rec-20260815-005 is the workaround this gap forced",
+      "createdAt": "2026-08-21T02:25:03.799Z"
+    },
+    {
+      "id": "ev-20260821-008",
+      "recommendationId": "rec-20260821-005",
+      "kind": "note",
+      "summary": "4th occurrence 2026-08-21: dec-20260821-003 collision between PR #455's dedupe decision and primary checkout's unpushed D-Z decision (dec-20260813-005 supersession), resolved by renumbering to dec-20260821-004",
+      "createdAt": "2026-08-21T23:07:13.195Z"
+    },
+    {
+      "id": "ev-20260821-009",
+      "recommendationId": "rec-20260821-005",
+      "kind": "note",
+      "summary": "Correction: the affected files listed at filing time were guessed and wrong. Actual ID-minting logic lives in packages/core/src/intelligence/store/ids.ts (and packages/core/src/intelligence/store/ledger.ts), not the doctor/promote paths originally cited; doctor's ledger-remote-collision check lives in packages/core/src/doctor/run.ts.",
+      "createdAt": "2026-08-21T23:07:27.934Z"
+    },
+    {
+      "id": "ev-20260822-001",
+      "recommendationId": "rec-20260731-003",
+      "kind": "note",
+      "summary": "Re-verified 2026-08-21 (HANDOFF-verifier-honesty-verify-premises.md, scout-20260821-verifier-honesty): the top-level provider-carrying field this rec asked for (GateProvenanceZ.provider/model) has been on main since phase 232 / PR #327 (merged 2026-07-27 18296088), 4 days BEFORE this rec was even filed (2026-07-31) -- the rec's own evidence note about it living only on the unmerged feat/kernel-assurance-v2 branch was already stale at filing time, it just wasn't re-checked. The narrower 'mock-downgraded vs genuinely-configured' distinction this rec also asks for now exists via phase 263's providerSelection:'configured'|'fallback'|'empty-diff' (packages/types/src/summary.ts:181), persisted for code-review/security-audit/spec-review/ui-spec-review/plan-review (corpus-confirmed: fallback fired 2x across 298 records). The one piece NOT covered -- deep-verify/per-task-verify's own fallback visibility -- is a deliberate, already-decided exclusion (dec-20260808-008: adding baseline provider persistence to those two gates would silently move assurance.overall toward strong on ordinary settles, the exact false-confidence risk v1.56 exists to close), not an open gap. This rec's full ask is shipped or deliberately answered; nothing remains to spec.",
+      "createdAt": "2026-08-22T00:15:17.601Z"
+    },
+    {
+      "id": "ev-20260822-002",
+      "recommendationId": "rec-20260806-004",
+      "kind": "note",
+      "summary": "Re-verified 2026-08-21 (HANDOFF-verifier-honesty-verify-premises.md Phase J, scout-20260821-verifier-honesty): this rec's own Summary already named BOTH halves of the problem -- (a) the persisted SUMMARY record being indistinguishable between a genuine clean pass and an empty-diff false pass, and (b) assurance.overall still being able to reach 'strong' from that false pass. Half (a) is now SHIPPED: phase 263 added providerSelection:'empty-diff' (packages/types/src/summary.ts:181), computed in packages/core/src/gates/security-audit.ts:31-33 and gates/code-review.ts:32-35 (isEmptyDiff = touched.length > 0 && diff.trim().length === 0 && result.provider !== 'mock'; empty-diff wins over configured when both apply), and rendered in verifier-label.ts:55. The rec's own mechanism claim ('early-returns without ever spawning a real provider call') was already corrected by this rec's own prior evidence note (2026-08-05) -- the guard is files.length===0 AND diff empty, so a non-empty-files/empty-diff case does spawn and burn a real call, exactly the empty-diff tag's scenario. Half (b) is CONFIRMED STILL OPEN and empirically proven, not just reasoned about: deriveAssuranceRecord's hasRealVerifier (packages/core/src/gates/assurance-record.ts:191) reads only verifierRollup, which groups gates[] by (provider, model) alone and never reads providerSelection -- a fixture with every non-mock gate tagged providerSelection:'empty-diff' and strong AC evidence still derives overall:'strong' (verified by direct call to deriveAssuranceRecord, not simulation). Corpus check: empty-diff has fired 0 times across 298 historical SUMMARY.json records, so this is a real, proven, but latent hole -- no historical grade is currently wrong. Re-scoping this rec to half (b) only; half (a) is done.",
+      "createdAt": "2026-08-22T00:15:50.395Z"
+    },
+    {
+      "id": "ev-20260822-003",
+      "recommendationId": "rec-20260701-001",
+      "kind": "note",
+      "summary": "Re-verified 2026-08-21 (HANDOFF-verifier-honesty-verify-premises.md Phase L sweep, scout-20260821-verifier-honesty): all three asks in this rec's Summary are shipped via its own converted-to-phase 139 (139-01-SUMMARY.json, all ACs pass): packages/core/src/init/plan.ts:534 derives testCommand: detectTestCommand(cwd) at init time; packages/core/src/gates/build-test-must-pass.ts prints the loud NO_TEST_COMMAND_NOTICE to stderr when no test command is configured; phase 166 later went further and added a language-aware assertion-capable coverageMode default. This rec has sat in status:converted/ready:needs-decision since 2026-07-02 without ever being promoted to shipped -- ledger housekeeping gap, not a live code gap. Promoting to shipped.",
+      "createdAt": "2026-08-22T00:16:07.240Z"
+    },
+    {
+      "id": "ev-20260822-004",
+      "recommendationId": "rec-20260730-001",
+      "kind": "note",
+      "summary": "Confirmed still valid 2026-08-21 (HANDOFF-verifier-honesty-verify-premises.md Phase L sweep, scout-20260821-verifier-honesty): packages/core/src/verify/phase-replay.ts:288 still reads const mode = config.coverageMode ?? 'mention' -- live config only, never summary.coverageMode. No commit since 2026-07-30 has touched this line; surrounding phase-239 T7/T8 comments confirm the exclusion is deliberate (bare-path byte-compat boundary), not an oversight, but the rec's ask (should phase-replay honor recorded provenance instead) remains open and accurately scoped as written. No re-scope needed.",
+      "createdAt": "2026-08-22T00:16:14.136Z"
+    },
+    {
+      "id": "ev-20260822-005",
+      "recommendationId": "rec-20260813-002",
+      "kind": "note",
+      "summary": "Re-verified 2026-08-21 (HANDOFF-verifier-honesty-verify-premises.md Phase J, scout-20260821-verifier-honesty): the rec's general claim ('providerSelection never serializes into SUMMARY.json's gates array') is FALSE as stated -- corpus check across 298 historical SUMMARY.json records shows providerSelection present 9 times (configured 7, fallback 2), proving the fallback tag DOES reach the durable artifact for the 5 seams phase 263 wired (code-review, security-audit, spec-review, ui-spec-review, plan-review). verify/verifier-factory.ts's non-enumerable tagging (cited in this rec's evidence) is real and deliberate, but every consuming gate reads it by exact property name, which works fine on a non-enumerable property -- non-enumerability only hides it from generic enumeration (JSON.stringify on the raw result object, Object.keys, spread), not from a direct named read. HOWEVER the rec's own concrete scenario (phase 274's deep-verify silently falling back to mock with no trace in the durable SUMMARY) is NOT covered by the 5 shipped seams -- deep-verify/per-task-verify are structurally, deliberately excluded from providerSelection persistence by dec-20260808-008, precisely because adding it under the provider/model field names that DO feed deriveAssuranceRecord's verifierRollup would silently move assurance.overall toward strong on ordinary settles with no review gate having run -- the same false-confidence risk this whole verifier-honesty arc exists to close. So the rec's specific evidence (274-01-SUMMARY.json) still accurately shows an invisible deep-verify fallback, but the fix it implicitly asks for (persist it) has already been considered and explicitly rejected for a documented, sound reason -- this is not an unaddressed gap, it's an already-adjudicated tradeoff.",
+      "createdAt": "2026-08-22T00:16:26.905Z"
+    },
+    {
+      "id": "ev-20260822-006",
+      "recommendationId": "rec-20260802-006",
+      "kind": "note",
+      "summary": "Confirmed still valid 2026-08-21 (HANDOFF-verifier-honesty-verify-premises.md Phase L sweep, scout-20260821-verifier-honesty): .github/workflows/security.yml's audit job runs pnpm audit at repo root; root pnpm-workspace.yaml lists only packages: - 'packages/*' -- website/ is not a workspace member and carries its own separate website/pnpm-lock.yaml + website/pnpm-workspace.yaml, structurally invisible to the root-scoped audit. No other workflow scans website/ for security issues. Readiness/priority unchanged (needs-decision/high) -- genuine live gap.",
+      "createdAt": "2026-08-22T00:21:41.104Z"
+    },
+    {
+      "id": "ev-20260822-007",
+      "recommendationId": "rec-20260806-006",
+      "kind": "note",
+      "summary": "Confirmed still valid 2026-08-21 (HANDOFF-verifier-honesty-verify-premises.md Phase L sweep, scout-20260821-verifier-honesty): packages/core/src/gates/build-test-must-pass.ts's bypass-through path (buildTestBypassed:true) has zero ctx.io.err calls -- completely silent, unlike the refusal branch which does log. packages/core/src/verify/test-runner.ts:17 confirms execSync(command, { cwd, stdio: 'ignore' }) discards subprocess output at the OS level, never captured for later surfacing. Readiness/priority unchanged (needs-decision/high) -- genuine live gap.",
+      "createdAt": "2026-08-22T00:21:41.358Z"
+    },
+    {
+      "id": "ev-20260822-008",
+      "recommendationId": "rec-20260822-001",
+      "kind": "note",
+      "summary": "287-01's first DRAFT attempt (AC-K1..AC-K5 headings) parsed to 0 ACs; draft check reported coherence: OK; settle produced acResults:[], assurance.overall:'unverified', with structural-verifier/test-coverage/--auto completeness gate all vacuously PASS. Measured 2026-08-22, HANDOFF-verifier-honesty-verify-premises.md phase K execution.",
+      "createdAt": "2026-08-22T00:49:19.399Z"
     }
   ]
 }

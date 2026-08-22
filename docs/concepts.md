@@ -173,9 +173,12 @@ below — and leaves `loopPosition`/`activeDraft` untouched so the exact same
   (`'strong' | 'mixed' | 'weak' | 'unverified'`, a single deterministic label
   computed from the other two: `'unverified'` when no gate carried verifier
   identity and no AC evidence rose above `'unverified'`; `'strong'` when at
-  least one gate ran under a real, non-`mock` provider and at least half of
+  least one gate ran under a real, non-`mock` provider whose call could
+  actually judge something (`providerSelection` other than `'empty-diff'` —
+  phase 287, see below) and at least half of
   all ACs landed at `ai-verified`/`executed` **and neither phase-283
-  condition below applies**; `'mixed'` when some real signal exists but not
+  condition below applies**; `'mixed'` when some real signal exists (same
+  phase-287 `providerSelection` check) but not
   enough to clear the `'strong'` bar (or the `'strong'` bar was cleared but
   phase 283's cap applies); `'weak'` otherwise). The derivation function
   (`packages/core/src/gates/assurance-record.ts`) is a pure reduction over
@@ -210,6 +213,21 @@ below — and leaves `loopPosition`/`activeDraft` untouched so the exact same
   for the full historical-corpus accounting of which past records' grades
   would change under this rule (none were rewritten; the report is
   read-only).
+- Phase 287: closes a gap between phase 263 (gates learned to tag
+  `providerSelection: 'empty-diff'` on a real-provider call whose diff was
+  empty, so it structurally could not judge anything) and `hasRealVerifier`
+  (which, until this phase, only ever read `gates[].provider`, never
+  `providerSelection`) — a settle whose only non-mock verifier signal
+  anywhere was an `'empty-diff'` call could still grade `'strong'`.
+  `hasRealVerifier` now excludes `'empty-diff'`-tagged gates; a mixed set —
+  one `'empty-diff'` gate alongside one genuinely `'configured'` (or
+  untagged) non-mock gate — is unaffected, since the configured gate alone
+  still satisfies the predicate. `verifierRollup`/`hasAnyVerifier` are
+  deliberately untouched (both still include every gate that carries
+  `provider`/`model`, unfiltered) — only `hasRealVerifier`'s own predicate
+  changed, so the persisted record still shows that the gate ran. Measured
+  against the full historical corpus this changes 0 grades (0 records carry
+  `providerSelection: 'empty-diff'` as of this phase).
 - Phase 244: `SUMMARY.json` optionally carries `foreignBinaryMismatch` — a
   sibling provenance field to `assurance` above, set only when this settle
   actually ran through a `cadence` binary whose realpath resolves OUTSIDE

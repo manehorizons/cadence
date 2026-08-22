@@ -1453,13 +1453,39 @@ describe('settleService threads bypass-aware assurance inputs into the finalize-
     ).toBe(true);
 
     // 283-01/AC-2: D-R's exclusion is threaded through the real finalize-path
-    // call site now — overall is capped at 'mixed', never 'strong', even
-    // though a real verifier engaged and this settle's only AC has
-    // non-mock-eligible evidence. (A non-empty error-severity `gateBypasses`
-    // is also genuinely present and threaded here — asserted above — but
-    // D-R alone already accounts for this scenario's 'mixed' result; the
-    // dedicated AC-1 test below isolates D-S's own contribution.)
-    expect(summary.assurance?.overall).toBe('mixed');
+    // call site now — the settle no longer grades 'strong', even though a
+    // real verifier engaged and this settle's only AC has non-mock-eligible
+    // evidence. A non-empty error-severity `gateBypasses` is also genuinely
+    // present and threaded here — asserted above.
+    //
+    // Phase 287 (287-01, D-Z) amendment: this fixture's `code-review` gate
+    // (`codeReview: { provider: 'anthropic' }` above) itself carries
+    // `providerSelection: 'empty-diff'` in the persisted SUMMARY (verified
+    // directly against `summary.gates` during 287-01's build). The cause is
+    // structural, not this fixture's own scenario: `collectGitDiff`
+    // (`packages/core/src/git/diff.ts`) returns `''` for ANY directory that
+    // isn't a real git workdir, and `setupBuildRepo` above never runs `git
+    // init` on `root` — `mktemp()` is a plain tmpdir. So `ctx.diff()` is
+    // empty here for a reason unrelated to rec-20260806-004's original
+    // already-committed-files scenario; it happens to exercise the exact
+    // same `isEmptyDiff` code path in `gates/code-review.ts` regardless.
+    // (The sibling `283-02` test below, using `setupTwoAcBuildRepo` — also
+    // never git-initialized — hits the identical empty-diff tag on its own
+    // `codeReview: { provider: 'anthropic' }` gate; its expected `'mixed'`
+    // doesn't change because its `strongRatio` (0.5) independently clears
+    // the `hasRealVerifier || strongRatio > 0` branch on its own.)
+    //
+    // Before phase 287, `hasRealVerifier` counted this empty-diff call as
+    // real verification anyway (the bug 287 fixes), which is why this test
+    // previously expected 'mixed' — D-R's exclusion of AC-1 plus a "real
+    // verifier engaged" signal that was itself false. With 287's fix, no
+    // real judgment happened anywhere in this settle (code-review's call was
+    // empty-diff; deep-verify's real objection is structurally excluded from
+    // `hasRealVerifier`, phase 275), so `overall` correctly derives 'weak',
+    // not 'mixed' — D-S's cap only ever downgrades an otherwise-'strong'
+    // result to 'mixed', it never upgrades a 'weak' one, so the
+    // error-severity bypass present here does not change this.
+    expect(summary.assurance?.overall).toBe('weak');
   });
 
   it("283-01/AC-1: an error-severity gateBypasses entry, with ZERO deep-verify involvement anywhere, caps overall at 'mixed' through the real finalize-path call site", async () => {

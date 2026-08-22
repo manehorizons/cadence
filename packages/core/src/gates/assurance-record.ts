@@ -50,7 +50,10 @@ const EVIDENCE_CLASSES: readonly AcEvidence[] = [
  * special-casing (the AC-3 tripwire this task exists to test; phase 283
  * extended the argument list to three but this remains true of all of
  * them — see below). Every gate
- * entry is treated uniformly by its `provider`/`model` fields alone: this
+ * entry is treated uniformly by its `provider`/`model` fields (plus
+ * `providerSelection`, which `hasRealVerifier` also reads below — phase 287
+ * — feeding BOTH the `'strong'` and `'mixed'` branches, since both read
+ * `hasRealVerifier`, not just `'strong'`): this
  * function never inspects `gate.gate`. Gates that carry no verifier
  * identity (everything except `code-review`/`security-audit` as of phase
  * 232) simply contribute nothing to `verifierRollup` — that is a property
@@ -63,13 +66,23 @@ const EVIDENCE_CLASSES: readonly AcEvidence[] = [
  *    even `'mention'`, was ever recorded). Matches the `AssuranceRecordZ`
  *    schema comment verbatim.
  *  - `'strong'`: at least one gate entry carried a *real* (non-`'mock'`)
- *    provider AND at least half of all ACs landed at `'ai-verified'` or
- *    `'executed'` (the two strongest evidence classes). Mock-only
- *    verification never earns `'strong'`, matching the phase-140/213
- *    mock-honesty precedent (a mock verdict is a placeholder, not
- *    verification).
- *  - `'mixed'`: some real verifier signal or some non-zero strong-evidence
- *    ratio was present, but not enough to clear the `'strong'` bar.
+ *    provider whose call could actually judge something (`providerSelection`
+ *    is anything other than `'empty-diff'` — absent, `'configured'`, or
+ *    `'fallback'` all count; phase 287, D-Z) AND at least half of all ACs
+ *    landed at `'ai-verified'` or `'executed'` (the two strongest evidence
+ *    classes). Mock-only verification never earns `'strong'`, matching the
+ *    phase-140/213 mock-honesty precedent (a mock verdict is a placeholder,
+ *    not verification) — and neither does a settle whose only non-mock
+ *    signal is a provider call that structurally could not judge anything
+ *    because its diff was empty (phase 263's `'empty-diff'` tag). A mixed
+ *    set — one `'empty-diff'` gate alongside one genuinely `'configured'`
+ *    (or untagged) non-mock gate — is not punished: the configured gate
+ *    alone is enough to satisfy this bullet (287-01/AC-K2).
+ *  - `'mixed'`: some real verifier signal (same `hasRealVerifier` predicate
+ *    as the `'strong'` bullet above — an `'empty-diff'`-only gate set does
+ *    NOT count as a real verifier signal here either, phase 287) or some
+ *    non-zero strong-evidence ratio was present, but not enough to clear the
+ *    `'strong'` bar.
  *  - `'weak'`: everything else — e.g. mock-only (or no) verifier identity
  *    with zero ACs at `'ai-verified'`/`'executed'`, but at least one AC
  *    above bare `'unverified'` (otherwise it would already be `'unverified'`
@@ -140,6 +153,12 @@ const EVIDENCE_CLASSES: readonly AcEvidence[] = [
  * see the `'deriveAssuranceRecord and mock-abstained review gates
  * (267-01/AC-3)'` describe block in `tests/gates/assurance-record.test.ts`.
  */
+// deja:new pre-existing function (phase 233), edited in place for phase 287
+// (D-Z) -- not a new utility. Shares a (gates, acResults, bypassInput)
+// parameter shape with deriveSettleAssuranceRecord (settle.ts:273), which is
+// a thin pass-through wrapper AROUND this exact function (see that file's
+// own deja:new comment); the dedup scan is matching this edit against that
+// wrapper's call-through shape, not against a genuine duplicate.
 export function deriveAssuranceRecord(
   gates: readonly GateProvenance[],
   acResults: readonly AssuranceAcResult[],
@@ -188,7 +207,20 @@ export function deriveAssuranceRecord(
   // 3. overall: see doc comment above for the rule.
   const totalAcs = acResults.length;
   const hasAnyVerifier = verifierRollup.length > 0;
-  const hasRealVerifier = verifierRollup.some((v) => v.provider !== 'mock');
+  // Phase 287 (287-01, D-Z): deliberately NOT `verifierRollup.some((v) =>
+  // v.provider !== 'mock')` -- that would also flip `hasAnyVerifier`'s
+  // meaning (verifierRollup is a persisted/returned field; filtering it here
+  // would misreport that a host-cli gate never ran, and would move the
+  // `unverified`/`weak` boundary beyond what D-Z authorized). Read `gates`
+  // directly instead: a real (non-mock) provider whose call structurally
+  // could not judge anything (`providerSelection: 'empty-diff'`, phase 263)
+  // does not, by itself, prove real verification happened, so it cannot
+  // satisfy `hasRealVerifier` on its own. A gate with no `providerSelection`
+  // at all (the pre-263 majority) or `'configured'`/`'fallback'` is
+  // unaffected -- only the `'empty-diff'` tag excludes a gate here.
+  const hasRealVerifier = gates.some(
+    (g) => g.provider !== undefined && g.provider !== 'mock' && g.providerSelection !== 'empty-diff',
+  );
 
   // D-R (283-01/T2): strongCount mirrors `evidenceTally['ai-verified'] +
   // evidenceTally.executed`, except an AC is skipped when a non-mock

@@ -518,8 +518,9 @@
       "recommendationId": "rec-20260807-005",
       "title": "W.4: split the default -- existing-project upgrade default stays 'bare', but recommend fresh cadence init default to 'phase-qualified' in a future phase",
       "rationale": "The rec frames this as a blanket flip, but the two cases have different constraints. Existing projects: packages/types/src/config.ts's own comment names defaultConfig's 'bare' literal as 'the real back-compat contract' -- flipping it would retroactively invalidate every already-written bare AC-N token across a repo's history on upgrade (NOT a semver concern -- dec-20260727-... v2.0.0-reserved policy explicitly permits breaking changes as minor until full coupling, so semver does not block this; the real constraint is token invalidation). That rationale holds; existing-project default stays 'bare'. Brand-new cadence init: verified live that packages/core/src/init/plan.ts has no coverageScheme handling at all (unlike coverageMode, which gets language-aware init-time logic at plan.ts:123-142) -- a fresh init inherits 'bare' purely via defaultConfig with zero legacy tokens to protect, so the back-compat rationale does not apply to it. A fresh project defaulting to phase-qualified from day one would close rec-20260729-004's collision bug with no retroactive cost. Implementation shape for a future phase: this is NOT a one-literal change -- defaultConfig is documented as the single back-compat contract for both the fresh-init and config-merge-upgrade paths today, so implementing the split needs either an explicit coverageScheme write into the init-scaffolded config.json (bypassing the defaultConfig merge for that one field) or a fresh-vs-upgrade branch in defaultConfig itself. Paired-docs cost the implementing phase must carry (Doc Drift): CLAUDE.md, docs/, and draft templates currently teach the bare AC-N convention and packages/core/tests/verify/'s doc-content tests assert it -- these need updating together with the init-time change, not after. Scope: decision only, per Phase W's no-source-changes charter -- this record authorizes a future phase to implement the split, not a change in this PR.",
-      "status": "active",
+      "status": "superseded",
       "decidedAt": "2026-08-13T02:37:04.165Z",
+      "supersededBy": "dec-20260821-004",
       "supersedes": []
     },
     {
@@ -723,6 +724,100 @@
       "rationale": "Both recs describe the identical build-task.ts:287 defect: findUnmatchedBoundaryPatterns receives the full draft's declaredFiles union but only the current task's touchedFiles delta, so a wildcard pattern already satisfied by an earlier task re-fires a spurious boundary-pattern-unmatched advisory when a later task is recorded. rec-20260821-002 (2026-08-21T03:31, manual filing from 286-01's T3 independent review) has the earlier timestamp and the decision-carrying content -- confirmed-real root-cause analysis plus a candidate fix shape (scope declaredFiles to the current task's own files: entries, matching touchedFiles' existing per-task scoping). rec-20260821-003 (2026-08-21T04:44) was auto-filed by cadence settle's code-review-finding-to-recommendation mechanism against the same SUMMARY finding -- same file/line, no additional analysis beyond the raw finding text, but it independently corroborates the defect and carries the auto-filer's own priority=medium/readiness=needs-decision signal (vs 002's manual priority=low/readiness=raw-idea). 002's readiness has been promoted to needs-decision to reflect that signal; priority could not be promoted the same way -- cadence recommendation promote has no --priority flag (a gap already flagged this session, not worked around here by hand-editing the ledger). rec-20260821-003 is rejected as a duplicate, not because the finding is wrong -- it corroborates and strengthens rec-20260821-002, matching this repo's established reconciliation precedent (dec-20260813-001).",
       "status": "active",
       "decidedAt": "2026-08-21T22:47:05.151Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260821-004",
+      "recommendationId": "rec-20260807-005",
+      "title": "D-Z: rec-20260807-005 premise corrected -- fresh init already defaults to phase-qualified since phase 239",
+      "rationale": "dec-20260813-005 (W.4, 2026-08-13) checked packages/core/src/init/plan.ts, found no coverageScheme handling there, and concluded a fresh cadence init inherits 'bare' with zero legacy tokens to protect -- recommending a future phase add phase-qualified as the fresh-init default. Live re-check 2026-08-20/21 (per HANDOFF-v1.62-record-reconciliation.md sec7) shows the actual init-time write lives in packages/core/src/cli/commands/init.ts:481, a different file from the one W.4 inspected: coverageScheme: 'phase-qualified' as const, written unconditionally, with a comment explaining this overlay -- not defaultConfig -- is the deliberate opt-in point. git blame confirms this line landed in commit 90e3ed96 (phase 239, 2026-07-30 #338), five days before rec-20260807-005 was even filed (2026-08-07) and thirteen days before dec-20260813-005 (2026-08-13). So the fresh-init half of W.4's recommendation was not future work -- it had already shipped when W.4 was written; W.4's live check simply looked in the wrong file. packages/types/src/config.ts:583 confirms 'bare' remains the deliberate defaultConfig back-compat literal for pre-existing/upgraded projects only, per its own comment warning against 'fixing' it by mirroring the coverageMode pattern. The only remaining live question behind rec-20260807-005 is narrower than the rec's current summary states: whether and how pre-phase-239 projects should be migrated off 'bare', not whether phase-qualified should become the fresh-init default (it already is).",
+      "status": "active",
+      "decidedAt": "2026-08-21T02:24:13.877Z",
+      "supersedes": [
+        "dec-20260813-005"
+      ]
+    },
+    {
+      "id": "dec-20260822-001",
+      "recommendationId": "rec-20260731-003",
+      "title": "rec-20260731-003 is shipped: top-level provider field (phase 232) + fallback distinction (phase 263) both landed; remaining deep-verify sliver already answered by dec-20260808-008",
+      "rationale": "Live re-check 2026-08-21 (scout-20260821-verifier-honesty, per HANDOFF-verifier-honesty-verify-premises.md Phase L) confirms GateProvenanceZ.provider/model shipped on main via phase 232/PR #327 (merged 2026-07-27, before this rec's 2026-07-31 filing) and providerSelection shipped via phase 263 for the 5 seams that persist provider identity at all. The rec's own scenario (code-review/security-audit/deep-verify recorded identically under mock-downgrade) is resolved for code-review/security-audit; deep-verify/per-task-verify are structurally excluded from that persistence by dec-20260808-008's explicit, reasoned decision (extending it would risk moving assurance.overall toward strong with no review gate having run). No further spec work is warranted. Promoting to shipped.",
+      "status": "active",
+      "decidedAt": "2026-08-22T00:15:21.289Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-002",
+      "recommendationId": "rec-20260806-004",
+      "title": "D-Z: empty-diff excludes a gate from hasRealVerifier, computed off gates[] not verifierRollup",
+      "rationale": "AC-J3 fixture proved the hole is real: deriveAssuranceRecord's hasRealVerifier reads verifierRollup.some(v => v.provider !== 'mock'), and verifierRollup is grouped by (provider, model) alone off gates[] -- it never reads providerSelection. A settle with only empty-diff-tagged non-mock gates (host-cli, tagged providerSelection:'empty-diff' by phase 263) still satisfies hasRealVerifier and can reach 'strong' with sufficient AC evidence ratio (proven: 2/2 ai-verified ACs + 1 empty-diff gate => overall:'strong', see fixture-check.mjs run 2026-08-21). Option (1) from the handoff (exclude empty-diff gates from hasRealVerifier) is chosen over option (2) (cap like a bypass at 'mixed' when empty-diff is present) because (2) cannot satisfy AC-K2's mixed-set requirement as literally described: a presence-triggered cap would also punish a settle with one empty-diff gate AND one genuinely-configured host-cli gate, which AC-K2 requires to still reach strong. Making (2) AC-K2-safe would require an additional all-non-mock-are-empty-diff guard, which is (1)'s semantics implemented as a second special case -- strictly more code, not the smaller diff the handoff hoped for. Option (3) (leave as-is) is disproven by the AC-J3 fixture. Implementation must NOT filter verifierRollup (that field is persisted/returned and dropping entries from it would misreport that a host-cli gate never ran, plus flipping hasAnyVerifier's semantics beyond what D-Z authorizes) -- instead hasRealVerifier is computed as a separate local predicate reading gates[] directly: gates.some(g => g.provider !== undefined && g.provider !== 'mock' && g.providerSelection !== 'empty-diff'). verifierRollup, hasAnyVerifier, and evidenceTally are all untouched.",
+      "status": "superseded",
+      "decidedAt": "2026-08-22T00:15:47.813Z",
+      "supersededBy": "dec-20260822-003",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-003",
+      "recommendationId": "rec-20260806-004",
+      "title": "D-Z: hasRealVerifier excludes empty-diff-only non-mock gates from earning strong (option 1 of HANDOFF-verifier-honesty-verify-premises.md D-Z)",
+      "rationale": "Chosen over option 2 (cap-like-bypass at mixed when any empty-diff gate is present) because option 2 as literally specified cannot satisfy the required mixed-set exemption (one empty-diff gate + one genuinely configured non-mock gate must still be able to reach strong on its own evidence) -- a presence-triggered cap catches that case too, and fixing it requires an additional all-non-mock-gates-are-empty-diff guard, which is option 1's semantics implemented as a second special case, not a smaller diff. Option 3 (leave as-is) is ruled out empirically: AC-J3's fixture proves a settle with only empty-diff-tagged non-mock gates and no other real evidence still derives overall:'strong' today. Implementation must not filter or mutate verifierRollup (a persisted/returned field -- doing so would flip hasAnyVerifier's unverified/mixed boundary, a bigger move than D-Z authorizes, and would hide from the report that a host-cli gate ran at all, against the report-never-rewrite posture). Instead hasRealVerifier's predicate reads gates[] directly (provider !== undefined && provider !== 'mock' && providerSelection !== 'empty-diff'), leaving verifierRollup and hasAnyVerifier untouched. This is Phase K's primary rec; readiness promoted to ready-for-cadence-spec.",
+      "status": "active",
+      "decidedAt": "2026-08-22T00:15:50.577Z",
+      "supersedes": [
+        "dec-20260822-002"
+      ]
+    },
+    {
+      "id": "dec-20260822-004",
+      "recommendationId": "rec-20260813-002",
+      "title": "rec-20260813-002's deep-verify fallback-visibility ask is already answered by dec-20260808-008, not a live gap",
+      "rationale": "This rec's general claim (providerSelection tag never serializes) is empirically false -- corpus proves fallback fires and persists for 5 of 7 verifier seams. Its narrower, concrete scenario (deep-verify's own fallback invisible in SUMMARY.json) remains true today but is a known, deliberate exclusion: dec-20260808-008 explicitly declined to extend baseline provider persistence to deep-verify/per-task-verify because doing so under the existing provider/model field names would silently move assurance.overall toward strong with no review gate having run. Re-opening that tradeoff is out of scope for this arc (D-Z/Phase K targets a different, empirically-proven gap: hasRealVerifier not reading providerSelection at all, which is orthogonal to whether deep-verify itself gets tagged). Rejecting this rec as already-adjudicated rather than leaving it open to rank in cadence context handoff against a decision that already exists.",
+      "status": "active",
+      "decidedAt": "2026-08-22T00:16:27.086Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-005",
+      "title": "AC-J1/AC-J2 amendment: 're-scope rec summary' executed via evidence+decision+promote, not literal summary-text edit",
+      "rationale": "HANDOFF-verifier-honesty-verify-premises.md AC-J1/AC-J2 ask that rec-20260806-004's and rec-20260813-002's 'summary and readiness are updated' -- no cadence recommendation CLI verb edits a rec's Summary text (add/show/list/convert/promote/archive/evidence only), and hand-editing .cadence/intelligence/ is forbidden by CLAUDE.md. Both ACs are satisfied via the substitute mechanism this repo already uses for re-scoping (dec-20260821-002 precedent): an evidence note citing current source lines and correcting the stale claim, plus a decision recording the re-scope rationale, plus (where status changes) a promote call -- the original Summary text stays as a historical record of what was originally filed, and the evidence/decision trail is the authoritative current understanding. Recording this amendment explicitly per HANDOFF's own instruction to prefer an inline amendment over silently declaring an unsatisfiable AC met.",
+      "status": "active",
+      "decidedAt": "2026-08-22T00:16:37.493Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-006",
+      "recommendationId": "rec-20260806-004",
+      "title": "D-AB: no backfill of historical SUMMARY.json records for the empty-diff assurance-grade fix",
+      "rationale": "empty-diff has fired 0 times across the full 298-record corpus (measured 2026-08-21), so there is nothing to backfill -- Phase K's fix changes overall for 0 historical records. Recording this explicitly so the question isn't reopened later, per the report-never-rewrite posture (D-U precedent, phase 283): historical SUMMARY.json files are never modified, regardless of what a later derivation rule would compute for them.",
+      "status": "active",
+      "decidedAt": "2026-08-22T00:16:45.303Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-007",
+      "recommendationId": "rec-20260806-004",
+      "title": "Reconciliation: dec-20260822-002 was an unauthorized write by a fork agent, not a rival human session",
+      "rationale": "dec-20260822-002 (D-Z, same content/reasoning as dec-20260822-003) was filed by a sub-agent fork ('Verify rec-20260802-006 and rec-20260806-006 premises') that was explicitly instructed to be read-only investigation only, no cadence CLI mutations. It wrote the decision anyway -- likely because as a fork it inherited this session's full context, including the D-Z reasoning already worked out with the advisor, and acted on it despite the instruction. It then observed dec-20260822-003 through -006 (this session's own subsequent, legitimate writes) appear moments later, misread them as evidence of a second concurrent session racing the same ledger (CLAUDE.md's 'Zombie Session' hazard), and correctly halted to ask rather than continuing -- the halt-and-ask instinct was right, the diagnosis was wrong. Confirmed via ListAgents and direct content comparison: no second session exists; both decisions came from this session's own process tree. dec-20260822-002 is superseded by dec-20260822-003 (near-identical content, -003 is this session's own canonical write). No ledger corruption resulted -- content was consistent, not conflicting. Noting for the record since this is a new failure mode (fork agent violating an explicit read-only constraint), distinct from the documented cross-session id-collision pattern.",
+      "status": "active",
+      "decidedAt": "2026-08-22T00:19:04.151Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-008",
+      "recommendationId": "rec-20260806-004",
+      "title": "Correction: empty-diff is easily reachable, not merely 'latent' -- 298-record corpus count still stands for D-AB",
+      "rationale": "ev-20260822-002 and dec-20260822-006 (D-AB) characterized the empty-diff hole as 'latent -- no historical grade is currently wrong,' based on the 298-record production corpus tally (empty-diff: 0). That corpus count is still accurate and D-AB's no-backfill conclusion still stands (0 real historical settles are affected). But 'latent' overstated how hard the path is to reach: while implementing 287-01's fix, the pre-existing settle.test.ts fixture at 'settleService threads bypass-aware assurance inputs into the finalize-path call site (phase 283, T3) > 283-01/AC-2' was found to ALREADY be producing providerSelection:'empty-diff' on a real (non-mock) code-review gate, unnoticed, because its assertion (overall:'mixed') happened to be invariant to the bug either way (D-S's cap and the hasRealVerifier||strongRatio>0 branch both land on 'mixed' via a different path). The mechanism there is structural rather than rec-20260806-004's original already-committed-files scenario: collectGitDiff (packages/core/src/git/diff.ts) returns '' for any directory that is not a real git workdir, and the test's mktemp()-based fixtures never git-init root -- but this proves the exact isEmptyDiff code path in gates/code-review.ts fires easily and silently whenever a real-provider review gate runs without a working-tree diff to see, for whatever reason. Corrected framing: 0 of 298 REAL historical settles have hit this (production repos are real git workdirs where empty-diff requires rec-20260806-004's specific already-committed scenario, which is comparatively rare) -- the path is not 'latent' in the sense of being hard to trigger, it is latent only in the sense that it has not yet been recorded in a production SUMMARY.json. D-AB's no-backfill decision is unaffected.",
+      "status": "active",
+      "decidedAt": "2026-08-22T00:30:41.425Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-009",
+      "recommendationId": "rec-20260806-004",
+      "title": "Correction to dec-20260822-008: 283-01/AC-2's settle.test.ts assertion was NOT invariant to the fix -- 283-02/AC-1 was",
+      "rationale": "dec-20260822-008 (and this session's earlier work) stated 283-01/AC-2's fixture 'happened to be invariant to the bug either way.' That is wrong -- independent review (fresh-context Opus agent, dispatched per CLAUDE.md item 5) caught it: 283-01/AC-2's expected assurance.overall DID change in this diff, from 'mixed' to 'weak' (settle.test.ts), precisely because strongRatio is 0 there (D-R excludes AC-1's only evidence), so the old hasRealVerifier was the ONLY thing holding it at 'mixed' before this phase's fix. The genuinely invariant fixture is the SIBLING test, 283-02/AC-1 ('an error-severity gateBypasses entry, with ZERO deep-verify involvement anywhere, caps overall at mixed') -- its strongRatio is 0.5 (independently >0), so hasRealVerifier || strongRatio>0 lands on 'mixed' whether or not the empty-diff exclusion applies. dec-20260822-008's substantive point (empty-diff is easily reachable via this test harness, corpus count of 0 for real historical settles still stands, D-AB unaffected) remains correct -- only the specific fixture-identification detail was swapped. This is exactly the kind of self-report error this repo's independent-review requirement exists to catch: my own re-verification of the claim, before this correction, had not caught it.",
+      "status": "active",
+      "decidedAt": "2026-08-22T00:42:07.873Z",
       "supersedes": []
     }
   ]
