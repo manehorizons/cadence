@@ -631,6 +631,78 @@ rec-20260822-005 needed evidence that round 3's specific AC-2/AC-3 claims are fa
 
 rec-20260822-005 is medium priority and is an evidence question about deep-verify's real-provider reliability across convergence rounds, not a defect in the read-only-mode gate stack packs depends on. Item 1 (rec-20260822-006, now rejected) was the item that could have blocked packs by claiming the ledger's write protection was incomplete; that claim is false per the full audit. Item 2 stays open as needs-evidence/candidate and does not gate the packs arc's start.
 
+### dec-20260822-017 — Packs I-1: namespaced id grammar <scope>/<name>, internal packs use 'cadence' scope
+
+- decided: 2026-08-22T21:24:43.612Z
+
+config.packs.{enabled,disabled} stays string[] (no schema change); namespacing is a resolver-side validation rule. Internal packs use cadence/<name> now even though nothing collides yet, per docs/packs-design.md §5 I-1.
+
+### dec-20260822-018 — Packs I-2: manifest carries id/version/integrity from day one; integrity optional for source=local
+
+- decided: 2026-08-22T21:24:43.769Z
+
+Making integrity required is additive because it only applies when source != local, and no non-local pack exists yet -- checkable claim, not an assertion. docs/packs-design.md §5 I-2.
+
+### dec-20260822-019 — Packs I-3: gate deltas are tighten-only, enforced for internal packs too, structurally and behaviorally
+
+- decided: 2026-08-22T21:24:43.918Z
+
+Manifest schema has no remove/override key (structural) and gatesFor's own contract already has no removal path (behavioral, verified live against packages/core/src/gates/engine.ts). No self-exemption for internal packs. docs/packs-design.md §5 I-3.
+
+### dec-20260822-020 — Packs I-4: resolution via resolvePacks() (impure shell), application via effectiveGateSet() -- both single chokepoints
+
+- decided: 2026-08-22T21:24:44.073Z
+
+gatesFor(tier,profile) stays pure/no-I/O, unchanged signature. Resolution happens once per command invocation in a new resolvePacks(repoRoot,config). Application (pack-gate union) happens inside effectiveGateSet(), the pre-existing single wrapper all 9 real call sites already use (draft-check, draft-approve, build-task x2, settle, hooks/handlers x3, notify/loop-violation) -- verified by grep, not assumed. doctor's reachability scan and config-explain's matrix builder correctly keep calling raw gatesFor since they answer a whole-matrix question, not a per-phase one. source (local/registry/remote) is resolver-classified by how the pack was found, never self-declared by the manifest. docs/packs-design.md §4a/§4b/§5 I-4.
+
+### dec-20260822-021 — Packs I-5: precedence is trivial by construction -- union of a monotonic-only payload can't conflict
+
+- decided: 2026-08-22T21:24:44.238Z
+
+Because D-AP restricts payload to purely additive fields (gates.add, skillAudit.required), union across N packs is associative/commutative/idempotent -- no ordering rule or conflict table needed. Pack gates union onto gatesFor(tier, effectiveProfile(...)) output AFTER profile resolution, never interacting with profile selection itself. docs/packs-design.md §5 I-5.
+
+### dec-20260822-022 — Packs I-6: packs declare skills by name only, never ship skill bodies through CADENCE
+
+- decided: 2026-08-22T21:24:44.400Z
+
+Verified live: grep -rn 'skills/|SKILL\.md' --include=*.ts packages/core/src returns nothing; runSkillAuditCheck only checks invocation telemetry against effectiveRequired. A pack contributing to skillAudit.required cannot inject prompt text through any CADENCE surface, because no such channel exists. If a pack must someday deliver skill files, that's a separate host-adapter-layer concern outside the core pack contract. docs/packs-design.md §2, §5 I-6.
+
+### dec-20260822-023 — Packs D-AP: payload allowlist = skillAudit.required + gates[].add + declared commands (doctor-checked only)
+
+- decided: 2026-08-22T21:24:59.001Z
+
+Excludes arbitrary config defaults (would make I-3 unenforceable in practice), excludes requiredSkills-as-pack-payload (real narrowing, not redundancy -- config.skillAudit.required is project-global, draft.requiredSkills is per-phase, packs can only add global requirements in v1), excludes pack dependencies (see D-AQ). docs/packs-design.md §6 D-AP.
+
+### dec-20260822-024 — Packs D-AQ: no pack dependencies in v1; on enabled/disabled id collision, disabled wins
+
+- decided: 2026-08-22T21:24:59.159Z
+
+Dependency resolution deferred as a real, cheap-to-defer problem. Ambiguous config resolves toward less surface, matching tighten-only spirit. docs/packs-design.md §6 D-AQ.
+
+### dec-20260822-025 — Packs D-AR: discovery via .cadence/packs/<id>/pack.json (filesystem-local, git-tracked); doctor warns now, refuses once behaviorally consumed
+
+- decided: 2026-08-22T21:24:59.313Z
+
+Simplest thing satisfying I-4's local branch; npm-registry resolution deferred until 'registry' source is implemented. Doctor: unresolvable enabled pack is a warning in Slice 1 (no behavioral effect exists yet), escalates to a hard settle-time refusal once Slice 2/3 make packs behaviorally consumed -- mirrors v1.64.0's zero-AC-drafts fail-loud precedent; a silently-unresolvable pack is exactly the 'quietly disable what the user installed it to get' failure I-3 exists to prevent. docs/packs-design.md §6 D-AR.
+
+### dec-20260822-026 — Packs D-AS: skillAudit provenance recorded per-requirement (config/draft/pack:<id>), not flattened
+
+- decided: 2026-08-22T21:24:59.475Z
+
+Same class of decision as providerSelection's provenance field (dec-20260808-007) -- additive now, expensive to retrofit once artifacts without it exist. docs/packs-design.md §6 D-AS.
+
+### dec-20260822-027 — Packs D-AT: public naming deferred, not decided; 'packs' stays the config/internal term
+
+- decided: 2026-08-22T21:24:59.664Z
+
+config.packs is already public API and unchanged by this design. Full npm/GitHub/trademark/SEO collision check only matters immediately before a public identifier ships -- nothing ships publicly in this design phase. Recorded as a deferral, not a gap. docs/packs-design.md §6 D-AT.
+
+### dec-20260822-028 — Packs 4c: softCap is orthogonal to gate enforcement, verified not assumed -- no exemption needed for pack gates
+
+- decided: 2026-08-22T21:24:59.828Z
+
+auto is the default profile, so auto x complex is a mainstream cell, not a corner case -- checked directly rather than assumed benign. Every softCap consumer (draft-approve.ts, settle.ts) refuses the whole command without --allow-auto-complex, then runs the FULL gate list once past the cap -- nothing in gates[] is skipped or downgraded by softCap. A pack-contributed gate enforces identically to ALWAYS_FIRE once past the cap. docs/packs-design.md §4c.
+
 ## Superseded
 
 ### dec-20260730-002 — Finding identity uses an anchor-derived content hash; no fingerprint primitive is extracted from Deja

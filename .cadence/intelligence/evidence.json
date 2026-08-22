@@ -2333,6 +2333,34 @@
       "kind": "note",
       "summary": "289-01-SUMMARY.json's persisted deepVerify block has AC-1/2/3/4 pass:false (round-3 verdicts); 289-01-CODE-REVIEW.json's separate 'history' array proves 3 rounds ran and that per-round retention is already a working pattern elsewhere in the same phase's own artifacts.",
       "createdAt": "2026-08-22T20:17:28.781Z"
+    },
+    {
+      "id": "ev-20260822-018",
+      "recommendationId": "rec-20260822-009",
+      "kind": "note",
+      "summary": "config.packs schema has existed with zero consumers for months (grep -rln packs --include=*.ts packages/core/src returns nothing); docs/packs-design.md is the full design record.",
+      "createdAt": "2026-08-22T21:25:18.523Z"
+    },
+    {
+      "id": "ev-20260822-019",
+      "recommendationId": "rec-20260822-010",
+      "kind": "note",
+      "summary": "runSkillAuditCheck already computes effectiveRequired as a dedup'd union of config.skillAudit.required and draft.requiredSkills -- packs are a third union source, same mechanism.",
+      "createdAt": "2026-08-22T21:25:18.686Z"
+    },
+    {
+      "id": "ev-20260822-020",
+      "recommendationId": "rec-20260822-011",
+      "kind": "note",
+      "summary": "effectiveGateSet() (engine.ts:233) is the single existing chokepoint already used by all 9 real gatesFor-derived call sites (draft-check, draft-approve, build-task x2, settle, hooks/handlers x3, notify/loop-violation) -- verified by grep, not assumed.",
+      "createdAt": "2026-08-22T21:25:18.852Z"
+    },
+    {
+      "id": "ev-20260822-021",
+      "recommendationId": "rec-20260822-012",
+      "kind": "note",
+      "summary": "CMD-E measured 13 slash commands in .claude/commands/ as one of the four enforcement-primitive surfaces packs would compose; commands are declarative/doctor-checked only per D-AP.",
+      "createdAt": "2026-08-22T21:25:19.027Z"
     }
   ]
 }

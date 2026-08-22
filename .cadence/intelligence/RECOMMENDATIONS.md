@@ -1313,3 +1313,66 @@ Phase 289's rec-20260822-006 was a real instance: a code-review finding at round
 - next: cadence milestone propose
 
 289-01's real (non-mock) host-cli deep-verify ran 3 consecutive rounds during settle (289-01-CODE-REVIEW.json's separate code-review history shows the pattern; the deepVerify equivalent is not separately retained round-by-round). Rounds 1-2 caught two genuine, independently-confirmed gaps and were fixed; round 3, with zero AC-2/AC-3-relevant changes since round 1 where those ACs passed, gave a false refusal on both -- directly falsified by grepping the test files (rec-20260822-005: 5 289-01/AC-2 tests and 7 289-01/AC-3 tests exist, contradicting round 3's specific 'only 1 test cited' claims). Only round 3's verdict survives in 289-01-SUMMARY.json's persisted deepVerify block; rounds 1-2's verdicts exist only in human-written task-note prose (T2's PROGRESS.json note), not in any queryable artifact. A verifier that disagrees with itself across rounds is therefore invisible to anything but a human reading task notes -- cadence doctor, summary verify-all, and any future automated audit over SUMMARY.json corpora would see only the last round's (possibly wrong) verdict with no record that it contradicted an earlier passing round on unchanged evidence. Worth a decision: persist all convergence rounds' deepVerify verdicts (not just the final one) in SUMMARY.json, analogous to how 289-01-CODE-REVIEW.json's own 'history' array already retains per-round pass/findingsCount/verdict for code-review.
+
+## rec-20260822-009 — Packs Slice 1: manifest schema + resolvePacks() + doctor resolve/validate check, zero behavioral effect
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, doctor, packs
+- files: packages/types/src/config.ts, packages/core/src/doctor/run.ts, docs/reference/commands.md
+- evidence: config.packs schema has existed with zero consumers for months (grep -rln packs --include=*.ts packages/core/src returns nothing); docs/packs-design.md is the full design record.
+- next: cadence milestone propose
+
+Add PackManifest type, resolvePacks(repoRoot, config) impure-shell resolver, and a new cadence doctor check reporting each enabled pack resolved/unresolved with a reason. No consumer of resolved packs anywhere else -- gatesFor/effectiveGateSet output must stay byte-identical for every existing fixture. Ships its doctor-check row in docs/reference/commands.md in the same change (doc-drift rule). Proves I-1/I-2/I-4a. See docs/packs-design.md §7 Slice 1.
+
+## rec-20260822-010 — Packs Slice 2: skillAudit.required contribution with per-requirement provenance
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, packs
+- files: packages/core/src/checks/skill-audit.ts
+- evidence: runSkillAuditCheck already computes effectiveRequired as a dedup'd union of config.skillAudit.required and draft.requiredSkills -- packs are a third union source, same mechanism.
+- next: cadence milestone propose
+
+A pack's skillAudit.required unions into runSkillAuditCheck's effectiveRequired, tagged with source (config/draft/pack:<id>) in SUMMARY.json (D-AS). First real behavioral consumer of resolved packs. Doctor's unresolvable-enabled-pack check escalates from warning to hard settle-time refusal once this lands (D-AR), following the v1.64.0 fail-loud precedent. Depends on Slice 1. See docs/packs-design.md §7 Slice 2.
+
+## rec-20260822-011 — Packs Slice 3: tighten-only gate-profile deltas via effectiveGateSet(), config-explain stays honest
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, gates, packs
+- files: packages/core/src/gates/engine.ts, packages/core/src/config-explain/build.ts
+- evidence: effectiveGateSet() (engine.ts:233) is the single existing chokepoint already used by all 9 real gatesFor-derived call sites (draft-check, draft-approve, build-task x2, settle, hooks/handlers x3, notify/loop-violation) -- verified by grep, not assumed.
+- next: cadence milestone propose
+
+A pack's gates[].add unions into effectiveGateSet()'s output (never raw gatesFor -- gatesFor stays pure/2-arg/untouched). Manifest validation refuses any non-additive shape at resolve time, not silently. cadence config explain's current-tier row (not the whole-matrix table) reflects enabled packs' contribution so the command that exists to answer 'what's actually enforced' stays accurate once packs are real. Depends on Slice 1/2. See docs/packs-design.md §4b/§7 Slice 3.
+
+## rec-20260822-012 — Packs Slice 4 (stretch): declared-commands doctor check, non-enforced
+
+- status: candidate
+- ready: raw-idea
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, doctor, packs
+- evidence: CMD-E measured 13 slash commands in .claude/commands/ as one of the four enforcement-primitive surfaces packs would compose; commands are declarative/doctor-checked only per D-AP.
+- next: cadence milestone propose
+
+A pack's commands[] (declared slash-command names) checked for presence by cadence doctor only -- never gate-enforced, matching D-AP's exclusion of commands from anything gate-shaped. May land after the rest of the packs arc closes; explicitly optional. See docs/packs-design.md §7 Slice 4.
