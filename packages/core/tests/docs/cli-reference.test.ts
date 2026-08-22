@@ -165,4 +165,17 @@ describe('docs/reference/commands.md drift guard', () => {
     if (!manualRow) throw new Error('commands.md: --fix manual-classification row not found');
     expect(manualRow[1]).toContain('recommendation-archive-currency');
   });
+
+  it('290-01/AC-5: doctor section documents the packs check in both the v1 check set table and the --fix manual-classification passage', () => {
+    const md = readFileSync(join(REPO_ROOT, 'docs/reference/commands.md'), 'utf8');
+    const section = commandSection(md, 'doctor');
+
+    // The "v1 check set" table row naming the check.
+    expect(section).toMatch(/\|\s*`packs`\s*\|/);
+
+    // The `--fix` classification passage's `manual` list.
+    const manualRow = section.match(/\|\s*\*\*manual\*\*\s*\|([^|]*)\|/);
+    if (!manualRow) throw new Error('commands.md: --fix manual-classification row not found');
+    expect(manualRow[1]).toContain('packs');
+  });
 });

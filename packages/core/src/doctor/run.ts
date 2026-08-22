@@ -19,6 +19,7 @@ import {
   type Tier,
   type RecommendationLedger,
   type RecommendationStatus,
+  type PackManifest,
 } from '@thomas-powers-jr/cadence-types';
 import { checkNodeMajor } from '../cli/node-guard.js';
 import { loadConfig } from '../config/loader.js';
@@ -29,6 +30,7 @@ import {
   type VerifierSeam,
 } from '../activate/assess.js';
 import { gatesFor, effectiveProfile } from '../gates/engine.js';
+import { resolvePacks, type ResolvedPack } from '../packs/resolve.js';
 import { gatherOccupancy } from '../phases/occupancy.js';
 import { detectPhaseCollision, phaseNumber, type Occupancy } from '../phases/collision.js';
 import {
@@ -1288,6 +1290,97 @@ export async function checkCoverageModeLanguageSupport(root: string): Promise<Do
 }
 
 /**
+ * Report whether every enabled pack in `config.packs` actually resolves to a
+ * schema-valid `.cadence/packs/<id>/pack.json` on disk (phase 290, slice 1).
+ * Read-only and purely observational: this check is the ONLY place packs are
+ * surfaced at all in this slice — nothing in gate computation
+ * (`gatesFor`/`effectiveGateSet`) reads a pack yet.
+ *
+ * **Why `warning` and not `error` — do not "fix" this into an error.**
+ * `dec-20260822-025` (recorded as `docs/packs-design.md` §6 D-AR) locks a
+ * deliberate two-phase plan:
+ *
+ * - **Now (slice 1):** an enabled-but-unresolvable pack is a **warning**.
+ *   Nothing consumes packs behaviorally, so an unresolved pack breaks
+ *   nothing today — reporting it as `error` would fail `DoctorReport.ok`
+ *   over a condition with zero actual consequence, which is its own flavor
+ *   of dishonest gating.
+ * - **Once a later slice makes packs behaviorally consumed** (design doc
+ *   slices 2/3): an enabled-but-unresolvable pack becomes a **hard refusal
+ *   at settle time**, following v1.64.0's "fail loud instead of passing
+ *   every gate vacuously" precedent — a silently-unresolvable pack would
+ *   otherwise quietly disable exactly what the operator installed it to get
+ *   (the failure mode invariant I-3 exists to prevent).
+ *
+ * The escalation belongs to that later slice's settle-time refusal, not to
+ * this check's severity rung. Raising it here early would fire on repos
+ * where the condition is still inert.
+ *
+ * The `catch` degrades to `pass()` rather than `dec-20260810-005`'s
+ * `indeterminate` rung **deliberately**, sharing the same justification as
+ * {@link checkConductionReachability} (whose own degrade-on-load-failure
+ * lives in `runDoctor`'s wrapper, not inside that sync function itself —
+ * different code shape, same reasoning) and matching
+ * {@link checkCoverageModeLanguageSupport}'s identical async-try/catch
+ * construction: the only way `loadConfig` throws here is a missing or
+ * invalid `.cadence/config.json`, which `checkInitialized` above already
+ * reports as `error`. Degrading to
+ * `pass` avoids double-reporting that one underlying problem — it never
+ * claims packs resolved when that could not be determined, because a repo
+ * without a loadable config has no `packs.enabled` list to have resolved in
+ * the first place. This is not the pre-`indeterminate` legacy convention
+ * `checkRecommendationArchiveCurrency`'s doc comment calls out.
+ *
+ * `fixId` is always `null`: there is no safe automatic repair for an
+ * unresolvable pack. Fabricating a manifest would invent content the
+ * operator never authored, and silently dropping the id from
+ * `packs.enabled` would disable what they asked for — both are exactly the
+ * "quiet fallback" this codebase refuses.
+ */
+export async function checkPacks(root: string): Promise<DoctorCheck> {
+  let resolved: ResolvedPack[];
+  try {
+    const config = await loadConfig(root);
+    resolved = await resolvePacks(root, config);
+  } catch {
+    return pass('packs', 'Pack resolution not determinable (best-effort) — skipped.');
+  }
+
+  // Branch on the RESOLVED count, not `config.packs.enabled.length`: an id
+  // listed in both `enabled` and `disabled` is filtered out by `resolvePacks`
+  // (disabled wins — D-AQ), so a fully-disabled list yields zero results
+  // while `enabled` is non-empty. Branching on `enabled` would fall through
+  // to the "all resolved" path below and emit an empty, garbled id list.
+  if (resolved.length === 0) {
+    return pass('packs', 'No packs enabled (ids listed in packs.disabled are excluded).');
+  }
+
+  const ok = resolved.filter((p): p is Extract<ResolvedPack, { manifest: PackManifest }> =>
+    'manifest' in p,
+  );
+  const broken = resolved.filter((p): p is Extract<ResolvedPack, { error: string }> => 'error' in p);
+
+  if (broken.length === 0) {
+    return pass(
+      'packs',
+      `All ${ok.length} enabled pack(s) resolved: ${ok.map((p) => p.id).join(', ')}.`,
+    );
+  }
+
+  // Name BOTH sides: a mixed list is still the warning case, but the operator
+  // needs to know which packs are fine as well as which are not.
+  const brokenDetail = broken.map((p) => `${p.id} — ${p.error}`).join('; ');
+  const okDetail =
+    ok.length > 0 ? ` Resolved: ${ok.map((p) => p.id).join(', ')}.` : ' No enabled pack resolved.';
+  return fail(
+    'packs',
+    'warning',
+    `${broken.length} of ${resolved.length} enabled pack(s) did not resolve: ${brokenDetail}.${okDetail}`,
+    'Add the missing manifest at .cadence/packs/<id>/pack.json (or fix the reported error), or remove the id from `packs.enabled` in .cadence/config.json.',
+  );
+}
+
+/**
  * Warn threshold for {@link checkPhaseFreshness} (Phase 208, rec-20260722-001):
  * a task `updatedAt` within this many ms of `now` is treated as possible
  * live concurrent-session activity. 10 minutes. Hardcoded and documented,
@@ -2396,6 +2489,7 @@ export async function runDoctor(
     await checkOrphanedEvidence(root),
     await checkLedgerRemoteCollision(root),
     await checkCoverageModeLanguageSupport(root),
+    await checkPacks(root),
     await checkRoadmapCurrency(root),
     await checkReleaseCurrency(root),
   ];
