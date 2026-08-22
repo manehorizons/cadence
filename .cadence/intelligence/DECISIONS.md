@@ -582,6 +582,20 @@ ev-20260822-002 and dec-20260822-006 (D-AB) characterized the empty-diff hole as
 
 dec-20260822-008 (and this session's earlier work) stated 283-01/AC-2's fixture 'happened to be invariant to the bug either way.' That is wrong -- independent review (fresh-context Opus agent, dispatched per CLAUDE.md item 5) caught it: 283-01/AC-2's expected assurance.overall DID change in this diff, from 'mixed' to 'weak' (settle.test.ts), precisely because strongRatio is 0 there (D-R excludes AC-1's only evidence), so the old hasRealVerifier was the ONLY thing holding it at 'mixed' before this phase's fix. The genuinely invariant fixture is the SIBLING test, 283-02/AC-1 ('an error-severity gateBypasses entry, with ZERO deep-verify involvement anywhere, caps overall at mixed') -- its strongRatio is 0.5 (independently >0), so hasRealVerifier || strongRatio>0 lands on 'mixed' whether or not the empty-diff exclusion applies. dec-20260822-008's substantive point (empty-diff is easily reachable via this test harness, corpus count of 0 for real historical settles still stands, D-AB unaffected) remains correct -- only the specific fixture-identification detail was swapped. This is exactly the kind of self-report error this repo's independent-review requirement exists to catch: my own re-verification of the claim, before this correction, had not caught it.
 
+### dec-20260822-010 — D-AD: zero-AC drafts refuse at approve+settle, not a schema minimum
+
+- recommendation: rec-20260822-001
+- decided: 2026-08-22T03:11:07.271Z
+
+A non-empty ## Acceptance Criteria section that parses to zero ### AC-N blocks (heading mismatch, e.g. AC-K1) refuses at draft approve and warns at draft check; settle names the empty set explicitly rather than passing vacuously. Rejected: a DraftZ.acceptanceCriteria.min(1) schema minimum -- grep confirmed acceptanceCriteria: [] is a legitimate valid state used by draft new's pre-add-ac skeleton and by dozens of existing unit-test fixtures (packages/core/tests/gates/*.test.ts, packages/types/tests/plan.test.ts); a schema minimum would be a breaking restriction, not the additive-schema convention this repo requires, and would ripple into unrelated fixtures far beyond the defect's scope. Corpus scan: 0 of 299 historical DRAFTs would be affected.
+
+### dec-20260822-011 — D-AE: non-numeric AC headings reject loudly, AC_TOKEN_RE stays numeric-only
+
+- recommendation: rec-20260822-001
+- decided: 2026-08-22T03:11:07.457Z
+
+The parser errors on a non-numeric ### AC-<id>: heading, naming the numeric requirement and the offending heading, instead of silently dropping the block. Rejected: widening AC_TOKEN_RE/the heading regex to accept alphanumeric ids -- that change ripples into coverage.ts's token scanning, qualifier logic, and phase-id parsing, a much larger blast radius than the defect warrants; phase 285's near-miss (an over-eager AC-token normalization) is a live reminder of how that goes wrong. Numeric-only is a fine constraint -- being silent about violating it was the bug.
+
 ## Superseded
 
 ### dec-20260730-002 — Finding identity uses an anchor-derived content hash; no fingerprint primitive is extracted from Deja

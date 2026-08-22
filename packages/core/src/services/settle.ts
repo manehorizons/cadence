@@ -1601,6 +1601,30 @@ export async function settleService(
     if (!preconditionResult.ok) return preconditionResult.result;
     const { backend, state, activePhase, draftPath, draft, progress } = preconditionResult.data;
 
+    // Phase 288 (288-01, T3): a genuinely-empty AC set (parses fine, no
+    // malformed heading — that's a separate parse-time failure, T1) is
+    // schema-legal (D-AD) and settle must still be able to complete for
+    // one. But left unflagged, `acResults: []` sails through
+    // structural-verifier / test-coverage / evidence-floor / the
+    // completeness check with nothing to check, and `settle run --auto`
+    // exits 0 with an `assurance.overall` verdict that reads as an
+    // unqualified pass. Fire this as early as `draft` is available — one
+    // shared `settleService` handles BOTH `settle run --auto` and
+    // interactive settle (there is no separate interactive entry point in
+    // this file; `opts.auto` only changes downstream branching), so this
+    // single call site covers both. Unconditional on outcome (fires ahead
+    // of the collision/gate-set checks below, on both the eventual
+    // success and refusal paths) — the fact that nothing here can be
+    // verified is true regardless of how this settle attempt resolves.
+    // Guarded strictly on `.length === 0`, so a non-empty-AC draft's
+    // output is completely unaffected (byte-identical).
+    if (draft.acceptanceCriteria.length === 0) {
+      io.err(
+        'settle: this draft has zero acceptance criteria — nothing here can be verified, ' +
+          'regardless of how this settle attempt resolves.\n',
+      );
+    }
+
     const explicit = mergePassShorthands(
       draft.acceptanceCriteria.map((ac) => ac.id),
       (opts.ac ?? []).map(parseAcArg),

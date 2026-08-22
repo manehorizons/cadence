@@ -2230,34 +2230,32 @@
       "updatedAt": "2026-08-21T23:07:27.934Z"
     },
     {
-      "id": "rec-20260822-001",
-      "title": "A non-numeric AC heading (e.g. AC-K1) silently zeroes a DRAFT's entire AC chain, and 4 separate checks report clean anyway",
-      "summary": "packages/core/src/parse/draft-parser.ts:34's heading regex (/^### (AC-\\d+):/) and packages/core/src/verify/coverage.ts:53's token regex (AC_TOKEN_RE = /\\bAC-\\d+\\b/g) both require purely numeric AC ids. A hand-authored DRAFT.md with headings like '### AC-K1: ...' (mirroring an operator handoff doc's own K-lettered AC naming, e.g. HANDOFF-verifier-honesty-verify-premises.md's AC-K1..AC-K5) parses to ZERO Acceptance Criteria -- silently, no error. Confirmed live 2026-08-21/22 building phase 287: 'cadence draft check' reported coherence: OK on the zero-AC draft; the subsequent settle produced acResults: [] and assurance.overall: 'unverified', with structural-verifier, test-coverage, and --auto's own completeness check (blocks on incomplete ACs) ALL passing vacuously, since there was nothing to check against. The real source fix underneath was correct and independently reviewed, but the phase RECORD would have entered git history claiming zero verified ACs while 3 gates reported PASS -- the exact self-report-trust failure mode this repo's own CLAUDE.md names. Caught only because the settled SUMMARY.json was inspected by hand before committing (the settle itself was never pushed; re-done cleanly). Consider: cadence draft check (or draft-parser itself) should refuse/warn loudly when a DRAFT's '## Acceptance Criteria' section is non-empty but yields zero parsed ### AC-N blocks -- a strong structural signal of exactly this defect, cheap to detect without any semantic understanding of the content.",
+      "id": "rec-20260822-002",
+      "title": "MCP settle tool response drops stderr notices on the success path",
+      "summary": "packages/core/src/mcp/server.ts:26 selects response text via (io.stdout() || io.stderr()).trimEnd() — on any settle success, stdout is truthy (settleService always writes 'Settled <id>' to stdout before returning), so the || short-circuits and every stderr-only notice is silently dropped from the cadence_settle MCP tool's response, even though the same notice reaches real stderr on the CLI surface. Discovered during phase 288-01's independent review of T3 (a settle-time notice for genuinely-empty AC sets): confirmed via bufferIO() that a zero-AC settle's MCP response is 'Settled 01-01' / isError:false with no mention of the empty AC set, while the CLI prints the notice correctly. Refusal paths are unaffected (io.out is never called before a refusal, so stdout stays empty and stderr surfaces normally) -- this is a success-path-only gap. Root cause is in the shared MCP output-selection helper, not settle.ts itself, so it likely affects every MCP tool call that both writes routine stdout AND a stderr warning/notice on a successful outcome, not just settle -- worth auditing broadly, not patching settle-specific. Candidate fix: concatenate stdout+stderr (or otherwise surface both) instead of picking one via ||, verified against every existing MCP tool's expected response shape.",
       "source": "manual",
       "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "high",
+      "readiness": "needs-decision",
+      "priority": "medium",
       "leverageScore": 5,
       "riskScore": 5,
       "confidence": 0.7,
       "decayState": "fresh",
       "affectedAreas": [
-        "gates",
-        "parse",
-        "coherence-check"
+        "core",
+        "mcp"
       ],
       "affectedFiles": [
-        "packages/core/src/parse/draft-parser.ts"
+        "packages/core/src/mcp/server.ts"
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260822-008"
+        "ev-20260822-009"
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "scoutId": "scout-20260821-verifier-honesty",
-      "createdAt": "2026-08-22T00:49:19.399Z",
-      "updatedAt": "2026-08-22T00:49:19.399Z"
+      "createdAt": "2026-08-22T03:37:36.916Z",
+      "updatedAt": "2026-08-22T03:37:36.916Z"
     }
   ],
   "archived": [
@@ -8667,6 +8665,43 @@
       "archiveReason": "shipped",
       "createdAt": "2026-08-06T02:32:59.249Z",
       "updatedAt": "2026-08-22T00:44:06.106Z"
+    },
+    {
+      "id": "rec-20260822-001",
+      "title": "A non-numeric AC heading (e.g. AC-K1) silently zeroes a DRAFT's entire AC chain, and 4 separate checks report clean anyway",
+      "summary": "packages/core/src/parse/draft-parser.ts:34's heading regex (/^### (AC-\\d+):/) and packages/core/src/verify/coverage.ts:53's token regex (AC_TOKEN_RE = /\\bAC-\\d+\\b/g) both require purely numeric AC ids. A hand-authored DRAFT.md with headings like '### AC-K1: ...' (mirroring an operator handoff doc's own K-lettered AC naming, e.g. HANDOFF-verifier-honesty-verify-premises.md's AC-K1..AC-K5) parses to ZERO Acceptance Criteria -- silently, no error. Confirmed live 2026-08-21/22 building phase 287: 'cadence draft check' reported coherence: OK on the zero-AC draft; the subsequent settle produced acResults: [] and assurance.overall: 'unverified', with structural-verifier, test-coverage, and --auto's own completeness check (blocks on incomplete ACs) ALL passing vacuously, since there was nothing to check against. The real source fix underneath was correct and independently reviewed, but the phase RECORD would have entered git history claiming zero verified ACs while 3 gates reported PASS -- the exact self-report-trust failure mode this repo's own CLAUDE.md names. Caught only because the settled SUMMARY.json was inspected by hand before committing (the settle itself was never pushed; re-done cleanly). Consider: cadence draft check (or draft-parser itself) should refuse/warn loudly when a DRAFT's '## Acceptance Criteria' section is non-empty but yields zero parsed ### AC-N blocks -- a strong structural signal of exactly this defect, cheap to detect without any semantic understanding of the content.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "parse",
+        "coherence-check"
+      ],
+      "affectedFiles": [
+        "packages/core/src/parse/draft-parser.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260822-008"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260822-010",
+        "dec-20260822-011"
+      ],
+      "convertedToPhaseId": "288-zero-ac-fail-loud",
+      "scoutId": "scout-20260821-verifier-honesty",
+      "createdAt": "2026-08-22T00:49:19.399Z",
+      "updatedAt": "2026-08-22T04:09:11.297Z",
+      "shippedRef": "phase 288, this commit",
+      "archivedAt": "2026-08-22T04:09:11.297Z",
+      "archiveReason": "shipped"
     }
   ]
 }

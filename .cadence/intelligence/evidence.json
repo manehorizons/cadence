@@ -2269,6 +2269,13 @@
       "kind": "note",
       "summary": "287-01's first DRAFT attempt (AC-K1..AC-K5 headings) parsed to 0 ACs; draft check reported coherence: OK; settle produced acResults:[], assurance.overall:'unverified', with structural-verifier/test-coverage/--auto completeness gate all vacuously PASS. Measured 2026-08-22, HANDOFF-verifier-honesty-verify-premises.md phase K execution.",
       "createdAt": "2026-08-22T00:49:19.399Z"
+    },
+    {
+      "id": "ev-20260822-009",
+      "recommendationId": "rec-20260822-002",
+      "kind": "note",
+      "summary": "phase 288-01 T3 independent review (fresh-context subagent), 2026-08-22: bufferIO()-based reproduction showed a zero-AC settle's MCP response text omits the stderr notice that the CLI surface correctly prints",
+      "createdAt": "2026-08-22T03:37:36.916Z"
     }
   ]
 }
