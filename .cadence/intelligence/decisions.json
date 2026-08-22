@@ -882,6 +882,102 @@
       "status": "active",
       "decidedAt": "2026-08-22T20:17:41.663Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260822-017",
+      "title": "Packs I-1: namespaced id grammar <scope>/<name>, internal packs use 'cadence' scope",
+      "rationale": "config.packs.{enabled,disabled} stays string[] (no schema change); namespacing is a resolver-side validation rule. Internal packs use cadence/<name> now even though nothing collides yet, per docs/packs-design.md §5 I-1.",
+      "status": "active",
+      "decidedAt": "2026-08-22T21:24:43.612Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-018",
+      "title": "Packs I-2: manifest carries id/version/integrity from day one; integrity optional for source=local",
+      "rationale": "Making integrity required is additive because it only applies when source != local, and no non-local pack exists yet -- checkable claim, not an assertion. docs/packs-design.md §5 I-2.",
+      "status": "active",
+      "decidedAt": "2026-08-22T21:24:43.769Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-019",
+      "title": "Packs I-3: gate deltas are tighten-only, enforced for internal packs too, structurally and behaviorally",
+      "rationale": "Manifest schema has no remove/override key (structural) and gatesFor's own contract already has no removal path (behavioral, verified live against packages/core/src/gates/engine.ts). No self-exemption for internal packs. docs/packs-design.md §5 I-3.",
+      "status": "active",
+      "decidedAt": "2026-08-22T21:24:43.918Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-020",
+      "title": "Packs I-4: resolution via resolvePacks() (impure shell), application via effectiveGateSet() -- both single chokepoints",
+      "rationale": "gatesFor(tier,profile) stays pure/no-I/O, unchanged signature. Resolution happens once per command invocation in a new resolvePacks(repoRoot,config). Application (pack-gate union) happens inside effectiveGateSet(), the pre-existing single wrapper all 9 real call sites already use (draft-check, draft-approve, build-task x2, settle, hooks/handlers x3, notify/loop-violation) -- verified by grep, not assumed. doctor's reachability scan and config-explain's matrix builder correctly keep calling raw gatesFor since they answer a whole-matrix question, not a per-phase one. source (local/registry/remote) is resolver-classified by how the pack was found, never self-declared by the manifest. docs/packs-design.md §4a/§4b/§5 I-4.",
+      "status": "active",
+      "decidedAt": "2026-08-22T21:24:44.073Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-021",
+      "title": "Packs I-5: precedence is trivial by construction -- union of a monotonic-only payload can't conflict",
+      "rationale": "Because D-AP restricts payload to purely additive fields (gates.add, skillAudit.required), union across N packs is associative/commutative/idempotent -- no ordering rule or conflict table needed. Pack gates union onto gatesFor(tier, effectiveProfile(...)) output AFTER profile resolution, never interacting with profile selection itself. docs/packs-design.md §5 I-5.",
+      "status": "active",
+      "decidedAt": "2026-08-22T21:24:44.238Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-022",
+      "title": "Packs I-6: packs declare skills by name only, never ship skill bodies through CADENCE",
+      "rationale": "Verified live: grep -rn 'skills/|SKILL\\.md' --include=*.ts packages/core/src returns nothing; runSkillAuditCheck only checks invocation telemetry against effectiveRequired. A pack contributing to skillAudit.required cannot inject prompt text through any CADENCE surface, because no such channel exists. If a pack must someday deliver skill files, that's a separate host-adapter-layer concern outside the core pack contract. docs/packs-design.md §2, §5 I-6.",
+      "status": "active",
+      "decidedAt": "2026-08-22T21:24:44.400Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-023",
+      "title": "Packs D-AP: payload allowlist = skillAudit.required + gates[].add + declared commands (doctor-checked only)",
+      "rationale": "Excludes arbitrary config defaults (would make I-3 unenforceable in practice), excludes requiredSkills-as-pack-payload (real narrowing, not redundancy -- config.skillAudit.required is project-global, draft.requiredSkills is per-phase, packs can only add global requirements in v1), excludes pack dependencies (see D-AQ). docs/packs-design.md §6 D-AP.",
+      "status": "active",
+      "decidedAt": "2026-08-22T21:24:59.001Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-024",
+      "title": "Packs D-AQ: no pack dependencies in v1; on enabled/disabled id collision, disabled wins",
+      "rationale": "Dependency resolution deferred as a real, cheap-to-defer problem. Ambiguous config resolves toward less surface, matching tighten-only spirit. docs/packs-design.md §6 D-AQ.",
+      "status": "active",
+      "decidedAt": "2026-08-22T21:24:59.159Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-025",
+      "title": "Packs D-AR: discovery via .cadence/packs/<id>/pack.json (filesystem-local, git-tracked); doctor warns now, refuses once behaviorally consumed",
+      "rationale": "Simplest thing satisfying I-4's local branch; npm-registry resolution deferred until 'registry' source is implemented. Doctor: unresolvable enabled pack is a warning in Slice 1 (no behavioral effect exists yet), escalates to a hard settle-time refusal once Slice 2/3 make packs behaviorally consumed -- mirrors v1.64.0's zero-AC-drafts fail-loud precedent; a silently-unresolvable pack is exactly the 'quietly disable what the user installed it to get' failure I-3 exists to prevent. docs/packs-design.md §6 D-AR.",
+      "status": "active",
+      "decidedAt": "2026-08-22T21:24:59.313Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-026",
+      "title": "Packs D-AS: skillAudit provenance recorded per-requirement (config/draft/pack:<id>), not flattened",
+      "rationale": "Same class of decision as providerSelection's provenance field (dec-20260808-007) -- additive now, expensive to retrofit once artifacts without it exist. docs/packs-design.md §6 D-AS.",
+      "status": "active",
+      "decidedAt": "2026-08-22T21:24:59.475Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-027",
+      "title": "Packs D-AT: public naming deferred, not decided; 'packs' stays the config/internal term",
+      "rationale": "config.packs is already public API and unchanged by this design. Full npm/GitHub/trademark/SEO collision check only matters immediately before a public identifier ships -- nothing ships publicly in this design phase. Recorded as a deferral, not a gap. docs/packs-design.md §6 D-AT.",
+      "status": "active",
+      "decidedAt": "2026-08-22T21:24:59.664Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-028",
+      "title": "Packs 4c: softCap is orthogonal to gate enforcement, verified not assumed -- no exemption needed for pack gates",
+      "rationale": "auto is the default profile, so auto x complex is a mainstream cell, not a corner case -- checked directly rather than assumed benign. Every softCap consumer (draft-approve.ts, settle.ts) refuses the whole command without --allow-auto-complex, then runs the FULL gate list once past the cap -- nothing in gates[] is skipped or downgraded by softCap. A pack-contributed gate enforces identically to ALWAYS_FIRE once past the cap. docs/packs-design.md §4c.",
+      "status": "active",
+      "decidedAt": "2026-08-22T21:24:59.828Z",
+      "supersedes": []
     }
   ]
 }

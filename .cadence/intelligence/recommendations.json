@@ -2352,6 +2352,126 @@
       "scoutId": "scout-20260822-clean-base",
       "createdAt": "2026-08-22T20:17:28.781Z",
       "updatedAt": "2026-08-22T20:17:28.781Z"
+    },
+    {
+      "id": "rec-20260822-009",
+      "title": "Packs Slice 1: manifest schema + resolvePacks() + doctor resolve/validate check, zero behavioral effect",
+      "summary": "Add PackManifest type, resolvePacks(repoRoot, config) impure-shell resolver, and a new cadence doctor check reporting each enabled pack resolved/unresolved with a reason. No consumer of resolved packs anywhere else -- gatesFor/effectiveGateSet output must stay byte-identical for every existing fixture. Ships its doctor-check row in docs/reference/commands.md in the same change (doc-drift rule). Proves I-1/I-2/I-4a. See docs/packs-design.md §7 Slice 1.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "doctor",
+        "packs"
+      ],
+      "affectedFiles": [
+        "packages/types/src/config.ts",
+        "packages/core/src/doctor/run.ts",
+        "docs/reference/commands.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260822-018"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260822-packs-design",
+      "createdAt": "2026-08-22T21:25:18.523Z",
+      "updatedAt": "2026-08-22T21:25:18.523Z"
+    },
+    {
+      "id": "rec-20260822-010",
+      "title": "Packs Slice 2: skillAudit.required contribution with per-requirement provenance",
+      "summary": "A pack's skillAudit.required unions into runSkillAuditCheck's effectiveRequired, tagged with source (config/draft/pack:<id>) in SUMMARY.json (D-AS). First real behavioral consumer of resolved packs. Doctor's unresolvable-enabled-pack check escalates from warning to hard settle-time refusal once this lands (D-AR), following the v1.64.0 fail-loud precedent. Depends on Slice 1. See docs/packs-design.md §7 Slice 2.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "packs"
+      ],
+      "affectedFiles": [
+        "packages/core/src/checks/skill-audit.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260822-019"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260822-packs-design",
+      "createdAt": "2026-08-22T21:25:18.686Z",
+      "updatedAt": "2026-08-22T21:25:18.686Z"
+    },
+    {
+      "id": "rec-20260822-011",
+      "title": "Packs Slice 3: tighten-only gate-profile deltas via effectiveGateSet(), config-explain stays honest",
+      "summary": "A pack's gates[].add unions into effectiveGateSet()'s output (never raw gatesFor -- gatesFor stays pure/2-arg/untouched). Manifest validation refuses any non-additive shape at resolve time, not silently. cadence config explain's current-tier row (not the whole-matrix table) reflects enabled packs' contribution so the command that exists to answer 'what's actually enforced' stays accurate once packs are real. Depends on Slice 1/2. See docs/packs-design.md §4b/§7 Slice 3.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "gates",
+        "packs"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/engine.ts",
+        "packages/core/src/config-explain/build.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260822-020"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260822-packs-design",
+      "createdAt": "2026-08-22T21:25:18.852Z",
+      "updatedAt": "2026-08-22T21:25:18.852Z"
+    },
+    {
+      "id": "rec-20260822-012",
+      "title": "Packs Slice 4 (stretch): declared-commands doctor check, non-enforced",
+      "summary": "A pack's commands[] (declared slash-command names) checked for presence by cadence doctor only -- never gate-enforced, matching D-AP's exclusion of commands from anything gate-shaped. May land after the rest of the packs arc closes; explicitly optional. See docs/packs-design.md §7 Slice 4.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "doctor",
+        "packs"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260822-021"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-22T21:25:19.027Z",
+      "updatedAt": "2026-08-22T21:25:19.027Z",
+      "scoutId": "scout-20260822-packs-design"
     }
   ],
   "archived": [
