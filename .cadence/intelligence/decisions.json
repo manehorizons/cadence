@@ -837,6 +837,15 @@
       "status": "active",
       "decidedAt": "2026-08-22T03:11:07.457Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260822-012",
+      "recommendationId": "rec-20260821-005",
+      "title": "D-AF: dispatch write authority -- env-var read-only mode is viable, env DOES propagate to dispatched sub-agents",
+      "rationale": "Empirically tested the load-bearing premise of dec-20260822-007's incident (a sub-agent instructed read-only wrote to the ledger anyway) before designing a fix: does an env var set in the orchestrating session actually reach a dispatched Agent-tool sub-agent's process in this host? First probe was confounded (exported a var in one Bash tool call, then dispatched in a separate call -- the Bash tool's own contract says shell state does not persist between commands, so the var was already gone; this measured 'a dead export is invisible', not process inheritance). Second probe compared process-level vars already set at session launch (CLAUDECODE, CLAUDE_CODE_SESSION_ID, CLAUDE_PID, etc.) between the orchestrator's own env and a freshly dispatched Agent-tool sub-agent's env: identical values, including the same session id and PID -- confirming dispatched sub-agents in this harness share the orchestrator's process-level environment. Conclusion: D-AF option 1 (env-var read-only mode, e.g. CADENCE_READ_ONLY=1, enforced at the atomicWriteText chokepoint) is empirically viable in this host's dispatch model, contrary to the handoff's hedged framing that option 1 might not work if the variable doesn't reach the child -- it does reach the child. The remaining design question is HOW the orchestrator sets it for one dispatch without affecting the whole session: an ephemeral shell export does not survive across separate tool-call boundaries, so the mechanism most likely needs something that persists across tool-call boundaries -- e.g. .claude/settings.json's env block, which CADENCE already writes managed entries into -- rather than a transient per-command export. Not yet chosen; filed as a recommendation for a follow-up phase rather than designed/built here, per the handoff's own guidance to determine the enforcement point empirically before building, and to not merge this with rec-20260821-005's id-collision work.",
+      "status": "active",
+      "decidedAt": "2026-08-22T04:30:54.100Z",
+      "supersedes": []
     }
   ]
 }
