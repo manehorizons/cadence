@@ -1,5 +1,7 @@
 # @thomas-powers-jr/cadence-types
 
+## 1.65.0
+
 ## 1.64.0
 
 ## 1.63.0

@@ -1,5 +1,25 @@
 # @thomas-powers-jr/cadence-core
 
+## 1.65.0
+
+### Minor Changes
+
+- 31ca565: Add: `CADENCE_READ_ONLY` structurally enforces read-only mode at the intelligence store's write layer, not just as a prose prohibition in a dispatched sub-agent's prompt packet. Set to any non-empty string and every ledger-mutating operation — `decision add`/its transitions, `assumption add`/its transitions, `milestone`'s ledger-writing subcommands, `recommendation`'s ledger-affecting subcommands (including `retro feedback`), `intelligence reconcile`, and `cadence settle`'s best-effort advance of a converted recommendation — refuses with a non-zero exit and a message naming the mode and the blocked operation, leaving the ledger file's content byte-unchanged. The guard is wired into all eleven store-layer write entry points, including the shared low-level `writeLedger` primitive itself (not just its four subject-specific wrapper functions), so no direct import of the store's write API bypasses it — verified both by importing the guarded functions directly (bypassing the CLI) and, separately, by dispatching a real sub-agent (the `Agent` tool) with the mode active and capturing its actual refused exit code and stderr.
+
+  The five read-only investigation commands (`context`, `recommend`, `inspect`, `recommendation list`, `next`) are unaffected — none of their code paths touch a guarded entry point — and every command's behavior with the mode unset is unchanged from before this change.
+
+  Activate it for a dispatched sub-agent via `.claude/settings.json`'s `env` block on the primary checkout (a worktree's own copy does not govern what a dispatched child's process actually sees). The mechanism is a live add/update, not a live remove — deleting the key does not un-set it for the rest of the session; use an explicit empty string to turn it off. See `docs/reference/commands.md`'s new "Environment variables" section for the full activation recipe and its scoping gotchas, including a documented interaction with `cadence settle`: under the mode, the best-effort converted-recommendation advance is skipped and a stderr notice is printed rather than failing the whole settle.
+
+  The dispatch packet's forbidden-actions prose (`packages/core/src/dispatch/packet.ts`) now names `CADENCE_READ_ONLY` and states the enforcement is real and structural — without claiming a stronger isolation guarantee than what's actually proven (the mode is session-scoped-during-the-window, not process-isolated to the dispatched child; the orchestrator's own environment also sees the value while it's set).
+
+  Two adjacent gaps were found and filed for follow-up rather than fixed here: `rec-20260822-005` (a real host-cli deep-verify pass twice gave a false AC refusal on unchanged evidence across three settle attempts of this same phase — likely LLM judgment inconsistency, not a code bug, since neither the diff cap nor per-AC test-list formatting truncates or samples the evidence sent to the verifier). This phase settled with `--force` over that specific, empirically-falsified refusal (operator-approved), plus `--evidence-floor-bypass` for AC-4 (a real-dispatch proof task that is structurally not automated-test-observable by design).
+
+  Closes `rec-20260822-003`. Also fixes a real gap `rec-20260822-004` had tracked (`cadence settle` silently swallowing the converted-recommendation-advance failure instead of printing a notice) — found by this phase's own settle-time deep-verify gate and fixed in-phase rather than left open.
+
+### Patch Changes
+
+- @thomas-powers-jr/cadence-types@1.65.0
+
 ## 1.64.0
 
 ### Minor Changes

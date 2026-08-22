@@ -4,6 +4,18 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.65.0] - 2026-08-22
+
+> Published to npm via the `Release` workflow (provenance), tag `v1.65.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
+
+### Added
+
+- `CADENCE_READ_ONLY` structurally enforces read-only mode at the intelligence store's write layer, not just as a prose prohibition in a dispatched sub-agent's prompt packet. Set to any non-empty string and every ledger-mutating operation — `decision add`/its transitions, `assumption add`/its transitions, `milestone`'s ledger-writing subcommands, `recommendation`'s ledger-affecting subcommands (including `retro feedback`), `intelligence reconcile`, and `cadence settle`'s best-effort advance of a converted recommendation — refuses with a non-zero exit and a message naming the mode and the blocked operation, leaving the ledger file's content byte-unchanged. The guard is wired into all eleven store-layer write entry points, including the shared low-level `writeLedger` primitive itself, so no direct import of the store's write API bypasses it. (Phase `289`.)
+
+### Fixed
+
+- `cadence settle`'s best-effort advance of a converted recommendation to `settle-pending` no longer silently swallows a failure (including a `CADENCE_READ_ONLY` refusal) in a bare `catch {}` — it now prints a stderr notice, mirroring the sibling finding-ledger-routing code path. (Phase `289`.)
+
 ## [1.64.0] - 2026-08-22
 
 > Published to npm via the `Release` workflow (provenance), tag `v1.64.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
