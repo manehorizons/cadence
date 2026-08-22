@@ -2312,6 +2312,27 @@
       "summary": "phase 289-dispatch-write-authority, draft 289-01, SUMMARY contentHash 889af0d0b662dba94b8e78e8cf8b6e38361b08761a83d0a4c664564accea1d35 — high finding at packages/core/src/intelligence/store/io.ts:57: `writeLedger` remains an exported, unguarded store writer; importing it with a real ledger spec/path can mutate `.cadence/intelligence` while `CADENCE_READ_ONLY=1`.",
       "path": ".cadence/phases/289-dispatch-write-authority/289-01-SUMMARY.json",
       "createdAt": "2026-08-22T18:14:36.065Z"
+    },
+    {
+      "id": "ev-20260822-015",
+      "recommendationId": "rec-20260822-007",
+      "kind": "note",
+      "summary": "289-01-CODE-REVIEW.json history: round2 fail@18:14:36.047Z (1 finding) -> rec-20260822-006 createdAt 18:14:36.065Z -> round3 pass@18:24:17.029Z (0 findings), matching 289-01-SUMMARY.md's completed timestamp 18:24:17.031Z (T1's fix).",
+      "createdAt": "2026-08-22T20:16:42.551Z"
+    },
+    {
+      "id": "ev-20260822-016",
+      "recommendationId": "rec-20260822-005",
+      "kind": "note",
+      "summary": "Independently re-falsified round 3's specific claims (not just trusting the rec's own text): grep -n '289-01/AC-2' read-only-mode.test.ts returns 5 distinct it() blocks (context handoff L74, recommend L103, inspect L123, recommendation list L143, next L168) against round 3's claim that only context handoff was cited. grep -n '289-01/AC-3' returns 7 distinct it() blocks (decision add L351, recommendation add L377, recommendation list L403, decision supersede L422, assumption add+validate L440, milestone propose L467, intelligence reconcile L482) against round 3's claim that only decision add and milestone writing were cited. Both round-3 claims are directly false against the merged test file. Did not attempt a repeat-deep-verify run (D-AN option 1, real provider cost) or artifact-retention schema change (option 2) this session -- option 3 (reconstruct/falsify from the existing record) was judged sufficient; see rec-20260822-008 for the artifact-retention gap this surfaced.",
+      "createdAt": "2026-08-22T20:17:15.708Z"
+    },
+    {
+      "id": "ev-20260822-017",
+      "recommendationId": "rec-20260822-008",
+      "kind": "note",
+      "summary": "289-01-SUMMARY.json's persisted deepVerify block has AC-1/2/3/4 pass:false (round-3 verdicts); 289-01-CODE-REVIEW.json's separate 'history' array proves 3 rounds ran and that per-round retention is already a working pattern elsewhere in the same phase's own artifacts.",
+      "createdAt": "2026-08-22T20:17:28.781Z"
     }
   ]
 }

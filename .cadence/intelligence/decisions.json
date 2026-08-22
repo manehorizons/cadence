@@ -846,6 +846,42 @@
       "status": "active",
       "decidedAt": "2026-08-22T04:30:54.100Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260822-013",
+      "recommendationId": "rec-20260822-006",
+      "title": "D-AL: reject rec-20260822-006 -- writeLedger is guarded, full intelligence/** writer audit found zero bypass",
+      "rationale": "The finding cited io.ts:57 as an unguarded writeLedger definition. That line is assertNotReadOnly('writeIntelligenceLedgers'), not a definition -- the only writeLedger definition is store/ledger.ts:64, guarded by assertNotReadOnly('writeLedger') at line 88 (Phase 289 T1), with a passing direct-call refusal test at store/ledger.test.ts:108. Widened the audit beyond store/*.ts per review feedback: across all of packages/core/src/intelligence/**, 12 direct assertNotReadOnly call sites exist (11 in store/*.ts, plus milestone.ts:457 for runMilestoneExport, found by T1's own review as a gap outside store/). Every other exported async writer reaches one of these guards transitively through a single terminal write call with no side-effecting write before it: recommendations.ts's 7 functions and retro-feedback.ts/milestone-propose.ts all terminate in one writeIntelligenceLedgers or writeMilestoneLedger call; milestone.ts's runProposeMilestones/runMilestoneTransition/runMilestonePreMortem terminate in writeMilestoneLedger. The raw writeLedger() primitive itself is called only from the 4 subject-specific wrapper functions in store/*.ts (io.ts, assumptions.ts, decisions.ts, milestones.ts), each of which guards before reaching it -- grep confirms no caller anywhere else in the codebase imports and calls it directly. The three cache-writing 'read-only investigation' modules (recommend.ts, context.ts, inspect.ts) write only report artifacts (recommend.json/RECOMMEND.md, context/*.json/.md, inspection.json/STRATEGY.md), never a ledger file -- consistent with the changeset's claim that those 5 commands are unaffected by design. Timing check: the finding (rec createdAt 18:14:36.065Z) was auto-filed by findings-to-ledger routing from a genuinely-true code-review verdict at 18:14:36.047Z -- it is the very finding that drove T1's fix, which landed 10 minutes later in the same settle (289-01-SUMMARY.md completed 18:24:17.031Z). The finding was true when filed and became false once T1 landed within the same phase; it was never filed against an already-fixed tree. Conclusion: no code change, no changeset, no release -- reject as not-a-defect against the current, merged tree.",
+      "status": "active",
+      "decidedAt": "2026-08-22T20:16:16.677Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-014",
+      "recommendationId": "rec-20260822-007",
+      "title": "D-AM: file the routing-reconciliation gap, not a staleness-of-review-finding claim",
+      "rationale": "Checked the handoff's staleness hypothesis (finding filed against a pre-T1 tree without re-verification) against 289-01-CODE-REVIEW.json's round history: round 2 failed at 18:14:36.047Z with the writeLedger finding; rec-20260822-006 was created at 18:14:36.065Z, 18ms later -- auto-filed by findings-to-ledger routing from that exact verdict. The finding was TRUE when filed and IS the finding that drove T1's fix, which landed within the same settle ~10 minutes later (round 3 passed 18:24:17.029Z, matching SUMMARY completed 18:24:17.031Z). The staleness hypothesis is refuted: this was never a stale-tree mis-verification, it was a correct finding whose same-settle fix left the auto-filed rec unreconciled. Filing 'gate findings should re-verify against the merged tree' would put a false process claim in the ledger. Filed rec-20260822-007 instead, with the narrower, evidenced framing: findings-to-ledger routing has no reconciliation path when a later round of the same settle resolves the finding it filed. Checked for duplicates first: rec-20260731-006 (O(N) routing cost / git-tracked-file churn) and dec-20260731-001 (same-round same-id finding merge) and dec-20260801-003 (cross-settle message-drift dedup) are all adjacent but cover different mechanisms -- none covers a same-settle later-round fix leaving an earlier-round auto-filed rec unreconciled.",
+      "status": "active",
+      "decidedAt": "2026-08-22T20:17:05.740Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-015",
+      "recommendationId": "rec-20260822-005",
+      "title": "D-AN: item-2 evidence via reconstruction (option 3), not a repeat live deep-verify run or a schema change",
+      "rationale": "rec-20260822-005 needed evidence that round 3's specific AC-2/AC-3 claims are false. Produced it via option (3): independently grepped read-only-mode.test.ts for the 289-01/AC-2 and 289-01/AC-3 tokens (5 and 7 distinct it() blocks respectively) and confirmed both directly contradict round 3's persisted reasons in 289-01-SUMMARY.json's deepVerify block. Did not run option (1) (repeat the real host-cli deep-verify N times against the settled tree to measure variance) -- real provider cost, and per the handoff's standing rules this session must not attempt to fix or force-settle anything. Did not implement option (2) (persist all verifier rounds in the artifact) as code this session -- it is a schema change belonging to a real phase, not a ledger-only clean-base session; filed as rec-20260822-008 instead, which is independently valuable regardless of whether round-3-style disagreement reproduces.",
+      "status": "active",
+      "decidedAt": "2026-08-22T20:17:41.454Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260822-016",
+      "recommendationId": "rec-20260822-005",
+      "title": "D-AO: item 2 does not block the packs arc",
+      "rationale": "rec-20260822-005 is medium priority and is an evidence question about deep-verify's real-provider reliability across convergence rounds, not a defect in the read-only-mode gate stack packs depends on. Item 1 (rec-20260822-006, now rejected) was the item that could have blocked packs by claiming the ledger's write protection was incomplete; that claim is false per the full audit. Item 2 stays open as needs-evidence/candidate and does not gate the packs arc's start.",
+      "status": "active",
+      "decidedAt": "2026-08-22T20:17:41.663Z",
+      "supersedes": []
     }
   ]
 }
