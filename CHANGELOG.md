@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.63.0] - 2026-08-22
+
+> Published to npm via the `Release` workflow (provenance), tag `v1.63.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
+
+### Fixed
+
+- A settle whose only real-provider verification signal is a `providerSelection: 'empty-diff'` gate (a real, non-mock verifier call whose diff was empty, so it structurally could not judge anything) can no longer earn `assurance.overall: 'strong'` on that signal alone. `deriveAssuranceRecord`'s `hasRealVerifier` previously read only `gates[].provider !== 'mock'`, never `providerSelection` — so a code-review/security-audit gate that ran a real provider against an empty diff (touched files already committed at settle time, or otherwise no working-tree delta) still counted as "real verification happened," even though nothing was actually judged. A mixed settle — one `empty-diff` gate alongside one genuinely `'configured'` (or untagged) non-mock gate — is unaffected and can still reach `'strong'` on the configured gate's own evidence. Measured against the full historical corpus (298 `SUMMARY.json` records) this changes 0 grades — no real settle has hit `providerSelection: 'empty-diff'` yet — but the gap was real and directly provable via a fixture. (Phase `287`.)
+
 ## [1.62.0] - 2026-08-21
 
 > Published to npm via the `Release` workflow (provenance), tag `v1.62.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
