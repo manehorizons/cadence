@@ -1263,38 +1263,6 @@ The .cadence/intelligence/*.json ledger mints next-available IDs (rec-YYYYMMDD-N
 
 packages/core/src/mcp/server.ts:26 selects response text via (io.stdout() || io.stderr()).trimEnd() — on any settle success, stdout is truthy (settleService always writes 'Settled <id>' to stdout before returning), so the || short-circuits and every stderr-only notice is silently dropped from the cadence_settle MCP tool's response, even though the same notice reaches real stderr on the CLI surface. Discovered during phase 288-01's independent review of T3 (a settle-time notice for genuinely-empty AC sets): confirmed via bufferIO() that a zero-AC settle's MCP response is 'Settled 01-01' / isError:false with no mention of the empty AC set, while the CLI prints the notice correctly. Refusal paths are unaffected (io.out is never called before a refusal, so stdout stays empty and stderr surfaces normally) -- this is a success-path-only gap. Root cause is in the shared MCP output-selection helper, not settle.ts itself, so it likely affects every MCP tool call that both writes routine stdout AND a stderr warning/notice on a successful outcome, not just settle -- worth auditing broadly, not patching settle-specific. Candidate fix: concatenate stdout+stderr (or otherwise surface both) instead of picking one via ||, verified against every existing MCP tool's expected response shape.
 
-## rec-20260822-003 — Dispatch write authority: a sub-agent instructed read-only must be structurally unable to mutate the intelligence ledger
-
-- status: settle-pending
-- ready: ready-for-cadence-spec
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core, dispatch, intelligence
-- files: packages/core/src/dispatch/packet.ts
-- evidence: dec-20260822-012: empirical env-var propagation test confirms a dispatched Agent-tool sub-agent shares the orchestrator's process-level environment, making an env-var read-only guard viable, with the per-dispatch-scoping mechanism still to be designed
-- next: cadence milestone propose
-
-packages/core/src/dispatch/packet.ts:52-60 already forbids a dispatched sub-agent from running any state-mutating cadence subcommand, in bold, shipped via rec-20260718-001. It was violated anyway: during the phase 287 build a dispatched sub-agent (not even carrying a packet -- an ad-hoc session instruction, prose with even less ceremony) wrote dec-20260822-002 to the ledger, then misdiagnosed its own orchestrator's legitimate concurrent writes as a rival session and halted to ask (dec-20260822-007 records the reconciliation; confirmed no real concurrent session, no corruption). This is the repo's own thesis demonstrated against itself: a prompt-level constraint on an agent is shape, and shape drifts. Investigated the fix (dec-20260822-012, D-AF): every ledger write funnels through a single chokepoint, atomicWriteText (packages/core/src/state/atomic-write.ts), called from packages/core/src/intelligence/store/{io,decisions,assumptions,reconcile,milestones}.ts. An env-var read-only mode (e.g. CADENCE_READ_ONLY=1) enforced at or just above that chokepoint is empirically viable in this host's dispatch model -- confirmed a dispatched Agent-tool sub-agent shares the orchestrator's process-level environment (identical CLAUDECODE/CLAUDE_CODE_SESSION_ID/CLAUDE_PID across parent and child), contrary to the original hedge that the variable might not reach the child. The open design question the next phase should resolve empirically before building: HOW does the orchestrator scope the var to one dispatch rather than the whole session -- a plain shell export doesn't survive across separate tool-call boundaries (verified), so the mechanism likely needs to live in something that does persist, e.g. .claude/settings.json's env block (CADENCE already writes managed entries into that file for host hooks), or some other per-dispatch-scoped seam still to be identified. Also determine empirically which atomicWriteText callers are ledger mutations vs state writes vs caches, since enforcement at that exact chokepoint may be too broad (could also block .cadence/state.json writes, phase artifacts, settle output) -- that classification is the phase's real design work, per the original handoff. Do not merge with rec-20260821-005 (cross-session id-collision) -- adjacent, separate problem, confirmed by hitting a live instance of exactly that id-collision pattern while filing this very recommendation (a second worktree independently minted dec-20260822-010 before the first worktree's branch had merged; resolved by waiting for the merge rather than hand-resolving, not by fixing the collision mechanism itself).
-
-## rec-20260822-004 — settle: silent-swallow catch masks converted-rec advance failures (incl. read-only refusal)
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: settle, intelligence-store
-- files: packages/core/src/services/settle.ts
-- evidence: 289-01 whole-branch review (2026-08-22), Important finding #1; sibling pattern at settle.ts:~1474 vs silent catch at ~1507-1516
-- next: cadence milestone propose
-
-cadence settle's best-effort advance of converted recs to settle-pending (runAdvanceConvertedToSettlePendingForPhase, packages/core/src/services/settle.ts:~1507-1516) is wrapped in a bare try{}catch{} with no stderr notice, unlike the sibling finding-ledger-routing block ~40 lines above (line ~1474) which does print one via io.err on failure. Phase 289 (289-01) added a new CADENCE_READ_ONLY guard at the intelligence store's write layer; that guard's refusal now routes through this same silent catch when settle runs with CADENCE_READ_ONLY active, so a settle can complete while silently failing to advance the rec -- violating this repo's own 'every fallback prints a loud stderr notice' convention (CLAUDE.md, The Quiet Fallback). Surfaced by 289-01's whole-branch review; out of scope to fix inside that phase since settle.ts is outside its declared task boundaries and the phase's own tasks were mid-settle. Fix: add an io.err notice in the catch mirroring the sibling block's pattern.
-
 ## rec-20260822-005 — settle --deep verify (host-cli) gave a false AC refusal on unchanged evidence -- likely incomplete evidence-assembly
 
 - status: candidate
