@@ -2276,6 +2276,13 @@
       "kind": "note",
       "summary": "phase 288-01 T3 independent review (fresh-context subagent), 2026-08-22: bufferIO()-based reproduction showed a zero-AC settle's MCP response text omits the stderr notice that the CLI surface correctly prints",
       "createdAt": "2026-08-22T03:37:36.916Z"
+    },
+    {
+      "id": "ev-20260822-010",
+      "recommendationId": "rec-20260822-003",
+      "kind": "note",
+      "summary": "dec-20260822-012: empirical env-var propagation test confirms a dispatched Agent-tool sub-agent shares the orchestrator's process-level environment, making an env-var read-only guard viable, with the per-dispatch-scoping mechanism still to be designed",
+      "createdAt": "2026-08-22T04:31:10.774Z"
     }
   ]
 }

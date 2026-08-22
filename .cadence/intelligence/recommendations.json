@@ -2225,7 +2225,9 @@
         "ev-20260821-009"
       ],
       "assumptionIds": [],
-      "decisionIds": [],
+      "decisionIds": [
+        "dec-20260822-012"
+      ],
       "createdAt": "2026-08-21T23:07:13.195Z",
       "updatedAt": "2026-08-21T23:07:27.934Z"
     },
@@ -2256,6 +2258,35 @@
       "decisionIds": [],
       "createdAt": "2026-08-22T03:37:36.916Z",
       "updatedAt": "2026-08-22T03:37:36.916Z"
+    },
+    {
+      "id": "rec-20260822-003",
+      "title": "Dispatch write authority: a sub-agent instructed read-only must be structurally unable to mutate the intelligence ledger",
+      "summary": "packages/core/src/dispatch/packet.ts:52-60 already forbids a dispatched sub-agent from running any state-mutating cadence subcommand, in bold, shipped via rec-20260718-001. It was violated anyway: during the phase 287 build a dispatched sub-agent (not even carrying a packet -- an ad-hoc session instruction, prose with even less ceremony) wrote dec-20260822-002 to the ledger, then misdiagnosed its own orchestrator's legitimate concurrent writes as a rival session and halted to ask (dec-20260822-007 records the reconciliation; confirmed no real concurrent session, no corruption). This is the repo's own thesis demonstrated against itself: a prompt-level constraint on an agent is shape, and shape drifts. Investigated the fix (dec-20260822-012, D-AF): every ledger write funnels through a single chokepoint, atomicWriteText (packages/core/src/state/atomic-write.ts), called from packages/core/src/intelligence/store/{io,decisions,assumptions,reconcile,milestones}.ts. An env-var read-only mode (e.g. CADENCE_READ_ONLY=1) enforced at or just above that chokepoint is empirically viable in this host's dispatch model -- confirmed a dispatched Agent-tool sub-agent shares the orchestrator's process-level environment (identical CLAUDECODE/CLAUDE_CODE_SESSION_ID/CLAUDE_PID across parent and child), contrary to the original hedge that the variable might not reach the child. The open design question the next phase should resolve empirically before building: HOW does the orchestrator scope the var to one dispatch rather than the whole session -- a plain shell export doesn't survive across separate tool-call boundaries (verified), so the mechanism likely needs to live in something that does persist, e.g. .claude/settings.json's env block (CADENCE already writes managed entries into that file for host hooks), or some other per-dispatch-scoped seam still to be identified. Also determine empirically which atomicWriteText callers are ledger mutations vs state writes vs caches, since enforcement at that exact chokepoint may be too broad (could also block .cadence/state.json writes, phase artifacts, settle output) -- that classification is the phase's real design work, per the original handoff. Do not merge with rec-20260821-005 (cross-session id-collision) -- adjacent, separate problem, confirmed by hitting a live instance of exactly that id-collision pattern while filing this very recommendation (a second worktree independently minted dec-20260822-010 before the first worktree's branch had merged; resolved by waiting for the merge rather than hand-resolving, not by fixing the collision mechanism itself).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "dispatch",
+        "intelligence"
+      ],
+      "affectedFiles": [
+        "packages/core/src/dispatch/packet.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260822-010"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-22T04:31:10.774Z",
+      "updatedAt": "2026-08-22T04:31:10.774Z"
     }
   ],
   "archived": [
@@ -8696,12 +8727,12 @@
         "dec-20260822-011"
       ],
       "convertedToPhaseId": "288-zero-ac-fail-loud",
-      "scoutId": "scout-20260821-verifier-honesty",
-      "createdAt": "2026-08-22T00:49:19.399Z",
-      "updatedAt": "2026-08-22T04:09:11.297Z",
       "shippedRef": "phase 288, this commit",
+      "scoutId": "scout-20260821-verifier-honesty",
       "archivedAt": "2026-08-22T04:09:11.297Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-22T00:49:19.399Z",
+      "updatedAt": "2026-08-22T04:09:11.297Z"
     }
   ]
 }
