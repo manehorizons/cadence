@@ -2260,34 +2260,6 @@
       "updatedAt": "2026-08-22T03:37:36.916Z"
     },
     {
-      "id": "rec-20260822-004",
-      "title": "settle: silent-swallow catch masks converted-rec advance failures (incl. read-only refusal)",
-      "summary": "cadence settle's best-effort advance of converted recs to settle-pending (runAdvanceConvertedToSettlePendingForPhase, packages/core/src/services/settle.ts:~1507-1516) is wrapped in a bare try{}catch{} with no stderr notice, unlike the sibling finding-ledger-routing block ~40 lines above (line ~1474) which does print one via io.err on failure. Phase 289 (289-01) added a new CADENCE_READ_ONLY guard at the intelligence store's write layer; that guard's refusal now routes through this same silent catch when settle runs with CADENCE_READ_ONLY active, so a settle can complete while silently failing to advance the rec -- violating this repo's own 'every fallback prints a loud stderr notice' convention (CLAUDE.md, The Quiet Fallback). Surfaced by 289-01's whole-branch review; out of scope to fix inside that phase since settle.ts is outside its declared task boundaries and the phase's own tasks were mid-settle. Fix: add an io.err notice in the catch mirroring the sibling block's pattern.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "settle",
-        "intelligence-store"
-      ],
-      "affectedFiles": [
-        "packages/core/src/services/settle.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260822-011"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-08-22T17:31:44.166Z",
-      "updatedAt": "2026-08-22T17:31:44.166Z"
-    },
-    {
       "id": "rec-20260822-005",
       "title": "settle --deep verify (host-cli) gave a false AC refusal on unchanged evidence -- likely incomplete evidence-assembly",
       "summary": "During 289-01's settle, the real (non-mock) host-cli deep-verify pass was run three consecutive times against the phase's AC coverage. Rounds 1-2 caught two genuine, independently-confirmed gaps (a missing CLI-subprocess refusal test for AC-1, and an AC-3/AC-6 wording contradiction), both fixed and re-verified. Round 3, with zero AC-2-relevant changes made since round 1 (where AC-2 passed), refused AC-2 claiming 'only context handoff is cited as exercised' and refused AC-3 claiming 'cited tests cover only decision add and milestone writing' -- both claims are directly falsified by grepping the test files: read-only-mode.test.ts has all five 289-01/AC-2-tagged tests (context handoff, recommend, inspect, recommendation list, next) and seven 289-01/AC-3-tagged tests (decision add, recommendation add, recommendation list, decision supersede, assumption add, assumption validate, milestone propose, intelligence reconcile). This suggests the deep-verify pass's evidence-assembly step (whatever selects/truncates which matching test titles/spans get shown to the verifier LLM) is incomplete or non-deterministic under some condition -- possibly a token/context truncation when a phase accumulates many coverage-evidence rows across multiple settle attempts. Worth investigating packages/core/src/verify/*.ts's evidence-gathering path for coverage-gate-satisfied ACs, and/or adding a regression fixture that pins a phase with >5 tests per AC to check the verifier is shown all of them.",
@@ -8817,10 +8789,41 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "289-dispatch-write-authority",
-      "createdAt": "2026-08-22T04:31:10.774Z",
-      "updatedAt": "2026-08-22T19:12:40.694Z",
       "shippedRef": "PR #463 (phase 289-dispatch-write-authority)",
       "archivedAt": "2026-08-22T19:12:40.694Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-22T04:31:10.774Z",
+      "updatedAt": "2026-08-22T19:12:40.694Z"
+    },
+    {
+      "id": "rec-20260822-004",
+      "title": "settle: silent-swallow catch masks converted-rec advance failures (incl. read-only refusal)",
+      "summary": "cadence settle's best-effort advance of converted recs to settle-pending (runAdvanceConvertedToSettlePendingForPhase, packages/core/src/services/settle.ts:~1507-1516) is wrapped in a bare try{}catch{} with no stderr notice, unlike the sibling finding-ledger-routing block ~40 lines above (line ~1474) which does print one via io.err on failure. Phase 289 (289-01) added a new CADENCE_READ_ONLY guard at the intelligence store's write layer; that guard's refusal now routes through this same silent catch when settle runs with CADENCE_READ_ONLY active, so a settle can complete while silently failing to advance the rec -- violating this repo's own 'every fallback prints a loud stderr notice' convention (CLAUDE.md, The Quiet Fallback). Surfaced by 289-01's whole-branch review; out of scope to fix inside that phase since settle.ts is outside its declared task boundaries and the phase's own tasks were mid-settle. Fix: add an io.err notice in the catch mirroring the sibling block's pattern.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "settle",
+        "intelligence-store"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/settle.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260822-011"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-22T17:31:44.166Z",
+      "updatedAt": "2026-08-22T19:14:06.223Z",
+      "shippedRef": "PR #463 (phase 289-dispatch-write-authority)",
+      "archivedAt": "2026-08-22T19:14:06.223Z",
       "archiveReason": "shipped"
     }
   ]

@@ -1263,22 +1263,6 @@ The .cadence/intelligence/*.json ledger mints next-available IDs (rec-YYYYMMDD-N
 
 packages/core/src/mcp/server.ts:26 selects response text via (io.stdout() || io.stderr()).trimEnd() — on any settle success, stdout is truthy (settleService always writes 'Settled <id>' to stdout before returning), so the || short-circuits and every stderr-only notice is silently dropped from the cadence_settle MCP tool's response, even though the same notice reaches real stderr on the CLI surface. Discovered during phase 288-01's independent review of T3 (a settle-time notice for genuinely-empty AC sets): confirmed via bufferIO() that a zero-AC settle's MCP response is 'Settled 01-01' / isError:false with no mention of the empty AC set, while the CLI prints the notice correctly. Refusal paths are unaffected (io.out is never called before a refusal, so stdout stays empty and stderr surfaces normally) -- this is a success-path-only gap. Root cause is in the shared MCP output-selection helper, not settle.ts itself, so it likely affects every MCP tool call that both writes routine stdout AND a stderr warning/notice on a successful outcome, not just settle -- worth auditing broadly, not patching settle-specific. Candidate fix: concatenate stdout+stderr (or otherwise surface both) instead of picking one via ||, verified against every existing MCP tool's expected response shape.
 
-## rec-20260822-004 — settle: silent-swallow catch masks converted-rec advance failures (incl. read-only refusal)
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: settle, intelligence-store
-- files: packages/core/src/services/settle.ts
-- evidence: 289-01 whole-branch review (2026-08-22), Important finding #1; sibling pattern at settle.ts:~1474 vs silent catch at ~1507-1516
-- next: cadence milestone propose
-
-cadence settle's best-effort advance of converted recs to settle-pending (runAdvanceConvertedToSettlePendingForPhase, packages/core/src/services/settle.ts:~1507-1516) is wrapped in a bare try{}catch{} with no stderr notice, unlike the sibling finding-ledger-routing block ~40 lines above (line ~1474) which does print one via io.err on failure. Phase 289 (289-01) added a new CADENCE_READ_ONLY guard at the intelligence store's write layer; that guard's refusal now routes through this same silent catch when settle runs with CADENCE_READ_ONLY active, so a settle can complete while silently failing to advance the rec -- violating this repo's own 'every fallback prints a loud stderr notice' convention (CLAUDE.md, The Quiet Fallback). Surfaced by 289-01's whole-branch review; out of scope to fix inside that phase since settle.ts is outside its declared task boundaries and the phase's own tasks were mid-settle. Fix: add an io.err notice in the catch mirroring the sibling block's pattern.
-
 ## rec-20260822-005 — settle --deep verify (host-cli) gave a false AC refusal on unchanged evidence -- likely incomplete evidence-assembly
 
 - status: candidate
