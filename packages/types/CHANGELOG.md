@@ -1,5 +1,7 @@
 # @thomas-powers-jr/cadence-types
 
+## 1.63.0
+
 ## 1.62.0
 
 ### Minor Changes
