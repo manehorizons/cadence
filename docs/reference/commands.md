@@ -48,6 +48,8 @@ Two CLIs are documented here:
 - [cadence-host-claude-code](#cadence-host-claude-code)
   - [install](#install)
   - [hook (host)](#hook-host)
+- [Environment variables](#environment-variables)
+  - [CADENCE_READ_ONLY](#cadence_read_only)
 - [Carry-forward notes](#carry-forward-notes)
 
 ---
@@ -663,7 +665,12 @@ agent is forbidden from running state-mutating `cadence` subcommands (e.g.
 `cadence build`/`cadence settle`), `git commit`/`git push`, `gh`/network
 actions, or invoking `AskUserQuestion` — once its verify condition is met
 (or it is blocked), it must stop and report back to the orchestrating
-session, which alone records the task's outcome. Every task also carries a
+session, which alone records the task's outcome. The prohibition block also
+notes that, when `CADENCE_READ_ONLY` is active for the dispatch, ledger-
+mutating operations are structurally refused at the intelligence store's
+write layer — not merely requested against by the prompt (phase 289; see
+[Environment variables — `CADENCE_READ_ONLY`](#cadence_read_only) below).
+Every task also carries a
 `recommendedIsolation` value of `'worktree'` or `'none'` — `'worktree'` when
 the task declares one or more `files:` (it will mutate the working tree),
 `'none'` when it declares none (read-only/no mutation expected) — surfaced
@@ -2901,6 +2908,70 @@ Shim invoked by Claude Code hooks: translates stdin and calls cadence hook <even
 `PostToolUse`). It reads the hook payload from stdin, translates it into an
 abstract event name, and calls `cadence hook <event>`. Not intended to be
 invoked directly by users.
+
+---
+
+## Environment variables
+
+### CADENCE_READ_ONLY
+
+Blocks every ledger-mutating operation **structurally** — at the intelligence
+store's write layer (phase 289) — not merely by prose convention. Set to any
+non-empty string to activate; fail-closed, so `CADENCE_READ_ONLY=0` still
+blocks (only unset or `""` means "not read-only").
+
+**What it blocks.** Every write entry point behind
+`.cadence/intelligence/`: `decision add` and `decision`'s transition
+subcommands (`supersede`/`rescind`/`reactivate`); `assumption add` and
+`assumption`'s transition subcommands (`validate`/`reject`/`reopen`);
+`milestone`'s ledger-writing subcommands (`propose`/`accept`/`defer`/
+`reopen`/`premortem`/`export`/`close`); `recommendation`'s ledger-affecting
+subcommands (including `retro feedback`, which records matched retro
+friction as recommendation evidence via the same guarded write path); and
+`intelligence reconcile`. Each refuses with a non-zero
+exit and a message naming `CADENCE_READ_ONLY` and the blocked operation;
+the ledger file's content is left byte-unchanged.
+
+**What it does not affect.** `context`, `recommend`, `inspect`,
+`recommendation list`, and `next` keep working unchanged, including writing
+their own derived `.md`/`.json` output — none of their code paths touch a
+guarded write entry point.
+
+**Activating it for a dispatched sub-agent.** Set the value in
+`.claude/settings.json`'s `env` block on the **primary checkout** before
+dispatch — a worktree's own local `.claude/settings.json` does not govern
+what a dispatched sub-agent's process actually sees, regardless of which
+checkout's working directory it runs in. Verified empirically (phase 289):
+adding the key, and changing an existing key's value, both propagate live to
+a subsequently-dispatched child. Turning it off again is **not** symmetric:
+deleting the key from the file does *not* un-set it for the rest of the
+session — a dispatch made after the deletion still sees the stale value. The
+only reliable way to turn it off mid-session is to set the value to an
+explicit empty string (`""`), never `"0"` (still blocks — fail-closed) and
+never a deletion. Also note that because the same `env` block governs the
+whole session, the *orchestrator's own* process environment picks up the
+value too while it's set — this is session-scoped-during-the-window, not a
+guarantee of per-dispatch process isolation. An orchestrator following the
+"turn on, dispatch, turn off" recipe must not attempt its own ledger writes
+between the on and off steps.
+
+```bash
+# One-off, in-process activation (e.g. for a script or a manual check):
+CADENCE_READ_ONLY=1 cadence decision add --title "..." --rationale "..."
+# refuses: "CADENCE_READ_ONLY is set — refusing ..."
+```
+
+See the [`dispatch plan`](#dispatch-plan) section above for how this is
+surfaced in a dispatched sub-agent's prompt packet.
+
+**Interaction with `cadence settle`.** `settle`'s best-effort advance of a
+converted recommendation to `settle-pending` (or, with `--ship-ref`, straight
+to `shipped`) also goes through the guarded write path. Under
+`CADENCE_READ_ONLY`, that advance does not happen and settle prints
+`note: converted-recommendation advance failed — <guard message>` to
+stderr rather than failing the whole settle — the recommendation stays in
+its prior status for a later, non-read-only settle or a manual
+`cadence recommendation promote` to pick up.
 
 ---
 

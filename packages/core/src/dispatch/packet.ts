@@ -21,7 +21,14 @@ export function recommendIsolation(task: Task): 'worktree' | 'none' {
  * absent tasks get nothing added, which is what keeps the rendered packet
  * byte-identical to the pre-DP-B baseline when no stop: is declared.
  * `verdictLines` (empty for the base packet) is spliced in right after that
- * and before the following blank line. Pure — no I/O.
+ * and before the following blank line. The forbidden-actions block is
+ * followed by a fixed (unconditional — this function reads no env, stays
+ * pure) note on `CADENCE_READ_ONLY`: phase 289 made ledger-write refusal
+ * under that env var a real, store-layer enforcement mechanism rather than
+ * a prose-only ask, so the note says so — without claiming the stronger,
+ * unproven guarantee of per-dispatch process isolation (see
+ * `docs/reference/commands.md` for the actual scoping mechanism and its
+ * limits). Pure — no I/O.
  */
 function buildLines(task: Task, draft: Draft, verdictLines: string[]): string[] {
   const filesStr = task.files.length > 0 ? task.files.map((f) => `\`${f}\``).join(', ') : '(none declared)';
@@ -58,6 +65,12 @@ function buildLines(task: Task, draft: Draft, verdictLines: string[]): string[] 
     '  external service.',
     '- Invoking `AskUserQuestion` or any other mechanism to prompt a human',
     '  interactively.',
+    '',
+    'If `CADENCE_READ_ONLY` is active for this dispatch, ledger-mutating',
+    'operations (e.g. `decision add`, `assumption add`) are structurally',
+    "refused at the intelligence store's write layer — not merely requested",
+    'against by this prompt. See `docs/reference/commands.md` for how it is',
+    'activated and its scoping limits.',
     '',
     `The moment your Verify condition is met — or the moment you are genuinely`,
     'blocked or need more context — STOP. Do not record the outcome yourself.',

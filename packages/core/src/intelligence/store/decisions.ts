@@ -18,6 +18,7 @@ import {
   writeIntelligenceLedgers,
 } from './io.js';
 import { deriveRecommendationLinks } from './recommendations.js';
+import { assertNotReadOnly } from './read-only-guard.js';
 
 // The decision ledger's on-disk schema (packages/types/src/intelligence.ts)
 // has no `archived` array — only recommendations soft-archives. `records()`
@@ -54,6 +55,7 @@ export async function writeIntelligenceDecisionLedger(
   root: string,
   ledger: IntelligenceDecisionLedger,
 ): Promise<void> {
+  assertNotReadOnly('writeIntelligenceDecisionLedger');
   await writeLedger(decisionLedgerSpec, decisionsPath(root), ledger, { mode: 0o600 });
   await atomicWriteText(decisionsMdPath(root), renderDecisionsMd(ledger));
 }
@@ -68,6 +70,7 @@ export async function addIntelligenceDecision(
   root: string,
   input: AddIntelligenceDecisionInput,
 ): Promise<IntelligenceDecision> {
+  assertNotReadOnly('addIntelligenceDecision');
   let recLedger: RecommendationLedger | null = null;
   if (input.recommendationId !== undefined) {
     recLedger = await readRecommendationLedger(root);
@@ -234,6 +237,7 @@ export async function runDecisionTransition(
   action: DecisionTransitionAction,
   by?: string,
 ): Promise<DecisionTransitionResult> {
+  assertNotReadOnly('runDecisionTransition');
   const ledger = await readIntelligenceDecisionLedger(root);
   const res = applyDecisionTransition(ledger, id, action, by, new Date());
   if (!res.ok) return res;

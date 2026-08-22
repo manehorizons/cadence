@@ -2,6 +2,7 @@ import { mkdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { atomicWriteJSON, type AtomicWriteOptions } from '../../state/atomic-write.js';
+import { assertNotReadOnly } from './read-only-guard.js';
 
 export interface LedgerRecords<TRec> {
   live: TRec[];
@@ -72,6 +73,19 @@ export async function writeLedger<
   ledger: TLedger,
   opts?: AtomicWriteOptions,
 ): Promise<void> {
+  // Phase 289 T1 (second revisit — code-review HIGH finding): this is the
+  // shared primitive under all four subject-specific guarded wrappers
+  // (writeIntelligenceLedgers, writeAssumptionLedger,
+  // writeIntelligenceDecisionLedger, writeMilestoneLedger), each of which
+  // already calls assertNotReadOnly with a more specific operation name
+  // before reaching here — this call is a no-op on every existing code path.
+  // It exists for the caller that doesn't go through one of those four: this
+  // function is exported and directly importable, so nothing but convention
+  // stopped a future (or a dispatched sub-agent's) direct `writeLedger(...)`
+  // call from bypassing the guard entirely. Closing it here, not just at the
+  // four wrappers, is what makes AC-1's "structurally refused at the write
+  // layer" claim true regardless of which import path a caller takes.
+  assertNotReadOnly('writeLedger');
   spec.parse(ledger);
   await mkdir(dirname(path), { recursive: true });
   await atomicWriteJSON(path, ledger, opts);

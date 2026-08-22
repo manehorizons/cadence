@@ -2283,6 +2283,35 @@
       "kind": "note",
       "summary": "dec-20260822-012: empirical env-var propagation test confirms a dispatched Agent-tool sub-agent shares the orchestrator's process-level environment, making an env-var read-only guard viable, with the per-dispatch-scoping mechanism still to be designed",
       "createdAt": "2026-08-22T04:31:10.774Z"
+    },
+    {
+      "id": "ev-20260822-011",
+      "recommendationId": "rec-20260822-004",
+      "kind": "note",
+      "summary": "289-01 whole-branch review (2026-08-22), Important finding #1; sibling pattern at settle.ts:~1474 vs silent catch at ~1507-1516",
+      "createdAt": "2026-08-22T17:31:44.166Z"
+    },
+    {
+      "id": "ev-20260822-012",
+      "recommendationId": "rec-20260822-005",
+      "kind": "note",
+      "summary": "289-01 settle attempts 2026-08-22: round 3's AC-2/AC-3 refusal claims falsified by direct grep against the test files; rounds 1-2's claims on the same phase were real and independently confirmed",
+      "createdAt": "2026-08-22T17:51:10.577Z"
+    },
+    {
+      "id": "ev-20260822-013",
+      "recommendationId": "rec-20260822-005",
+      "kind": "note",
+      "summary": "Follow-up investigation (same session, before user response on the settle decision): checked packages/core/src/verify/anthropic-verifier.ts's formatUserMessage -- the per-AC linked-tests list sent to the verifier is NOT truncated/sampled (every VerifyTestRef is included, no slice/limit). Checked the diff cap (verifier.diffCapBytes, default 256KB): the phase's actual cumulative working-tree diff is ~49KB, well under the cap, so diff truncation is not the mechanism either. This narrows the hypothesis: the false round-3 AC-2/AC-3 refusal is most likely plain LLM judgment inconsistency across repeated calls on the same complete, untruncated input (a known LLM reliability failure mode -- claiming a narrower evidence set than what was actually supplied), not a code-level evidence-assembly bug. Revises this rec's original 'incomplete or non-deterministic evidence-assembly' hypothesis toward 'the single-shot LLM verdict has no cross-check/majority-vote and is empirically not reliable enough to hard-block settle on its own for phases whose evidence set is unchanged between runs.' Possible directions: (a) log the exact verifier input alongside the verdict so a refusal is reproducible/auditable after the fact instead of only the verdict reason surviving; (b) require 2-of-3 agreement across repeated deep-verify calls before treating a refusal as blocking; (c) at minimum, surface to the operator when a re-run of deep-verify on unchanged evidence produces a different verdict than a prior run in the same settle session, since that's a strong signal the refusal shouldn't be trusted as-is.",
+      "createdAt": "2026-08-22T17:53:21.141Z"
+    },
+    {
+      "id": "ev-20260822-014",
+      "recommendationId": "rec-20260822-006",
+      "kind": "cadence-artifact",
+      "summary": "phase 289-dispatch-write-authority, draft 289-01, SUMMARY contentHash 889af0d0b662dba94b8e78e8cf8b6e38361b08761a83d0a4c664564accea1d35 — high finding at packages/core/src/intelligence/store/io.ts:57: `writeLedger` remains an exported, unguarded store writer; importing it with a real ledger spec/path can mutate `.cadence/intelligence` while `CADENCE_READ_ONLY=1`.",
+      "path": ".cadence/phases/289-dispatch-write-authority/289-01-SUMMARY.json",
+      "createdAt": "2026-08-22T18:14:36.065Z"
     }
   ]
 }

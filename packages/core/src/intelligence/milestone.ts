@@ -15,6 +15,7 @@ import {
   readAssumptionLedger,
   readRecommendationLedger,
 } from './store/io.js';
+import { assertNotReadOnly } from './store/read-only-guard.js';
 import {
   readMilestoneLedger,
   writeMilestoneLedger,
@@ -453,6 +454,7 @@ export async function runMilestoneExport(
   id: string,
   now: Date = new Date(),
 ): Promise<ExportResult> {
+  assertNotReadOnly('runMilestoneExport');
   const ledger = await readMilestoneLedger(root);
   const target = ledger.milestones.find((m) => m.id === id);
   if (!target) return { ok: false, error: `milestone ${id} not found` };

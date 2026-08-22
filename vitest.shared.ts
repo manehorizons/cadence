@@ -107,6 +107,19 @@ export default defineConfig({
     environment: 'node',
     testTimeout: TIMEOUT_MS,
     hookTimeout: TIMEOUT_MS,
+    // Auto-revert every `vi.stubEnv()` call before each test runs (vitest's
+    // `onBeforeTryTask` calls `vi.unstubAllEnvs()` when this is on), on top
+    // of any explicit `vi.unstubAllEnvs()` a test file's own afterEach
+    // already does. This is defense-in-depth for `pool: 'forks'` below:
+    // process.env is a live object shared by every test file a worker
+    // happens to execute, so a stub a test forgets to unstub (a future
+    // author's mistake, not a hypothetical today) would otherwise bleed
+    // into whichever file the same forked worker runs next. Confirmed safe
+    // to add repo-wide: at the time this was added, `vi.stubEnv` had zero
+    // existing call sites in the repo (only the manual process.env
+    // save/restore pattern it was introduced to replace), so no test
+    // anywhere relies on a stub persisting across tests within a file.
+    unstubEnvs: true,
     pool: 'forks',
     // Vitest 4's pool rework flattened per-pool min/max worker knobs
     // (poolOptions.<pool>.{minForks,maxForks}) into a single top-level cap:

@@ -24,6 +24,7 @@ import {
 import { readMilestoneLedger } from './milestones.js';
 import { deriveRecommendationLinks } from './recommendations.js';
 import { deriveDecisionInverseLinks } from './decisions.js';
+import { assertNotReadOnly } from './read-only-guard.js';
 
 export type IntelligenceReconcileResult = {
   present: boolean;
@@ -36,6 +37,7 @@ export type IntelligenceReconcileResult = {
 export async function runIntelligenceReconcile(
   root: string,
 ): Promise<IntelligenceReconcileResult> {
+  assertNotReadOnly('runIntelligenceReconcile');
   const recExists = existsSync(recommendationsPath(root));
   const evExists = existsSync(evidencePath(root));
   const asExists = existsSync(assumptionsPath(root));

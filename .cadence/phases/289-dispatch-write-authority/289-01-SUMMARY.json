@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 2,
+  "draftId": "289-01",
+  "completedAt": "2026-08-22T18:24:17.031Z",
+  "acResults": [
+    {
+      "id": "AC-4",
+      "pass": true,
+      "note": "Proven via real dispatched sub-agent (Agent tool, --execution dispatch) with CADENCE_READ_ONLY set in the primary checkout's .claude/settings.json env block; child process refused a ledger write with the guard's own message, captured verbatim in T4's PROGRESS.json note. Not test-coverable by design (proof-only task, no files declared).",
+      "evidence": "unverified"
+    },
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-5",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-6",
+      "pass": true,
+      "evidence": "ai-verified"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "ran"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "ran"
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "ran",
+      "observedProvider": "host-cli"
+    },
+    {
+      "gate": "code-review",
+      "status": "ran",
+      "provider": "host-cli",
+      "providerSelection": "configured"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Third revisit, driven by a real code-review gate (host-cli, ran during D-AN's --force settle) finding a genuine HIGH-severity structural gap: writeLedger (packages/core/src/intelligence/store/ledger.ts) is the shared low-level primitive under all four guarded wrapper functions but was itself exported, directly importable, and unguarded -- nothing structurally stopped a future caller that imports ledger.js directly (skipping all four wrappers) from mutating any ledger under CADENCE_READ_ONLY. Verified via repo-wide grep before fixing: today only the four wrappers and ledger.test.ts's own unit tests call it, so no current caller exploits this, but the exposed surface contradicted AC-1's 'structurally refused at the write layer' claim. Fixed: added assertNotReadOnly('writeLedger') as the function's own first statement -- a no-op on all four existing call paths (which already guard earlier with more specific operation names), closing the primitive itself for any future direct importer. New test in ledger.test.ts (which already imports writeLedger directly for its generic-primitive tests via a fake widget subject spec): 289-01/AC-1, 289-01/AC-5 direct call under CADENCE_READ_ONLY refuses with the guard's message and never creates the file. Operator explicitly authorized this fix-and-re-settle before starting ('Yes, authorized to fix and re-settle') -- this was reported and approved, not decided unilaterally, since it surfaced only after the phase had already settled once under D-AN's --force. Re-verified: typecheck clean, full suite green (24/24 turbo tasks), ledger.test.ts 15/15 (was 14, +1), cadence verify coverage --explain reports SATISFIED for AC-1 and AC-5 (both unaffected in scope, strengthened in substance).",
+      "execution": "dispatch",
+      "isolation": "none",
+      "modelClass": "complex"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Fix round driven by settle's independent deep-verify pass (host-cli provider, real): refused AC-1 for lacking a CLI-subprocess (process-level, non-zero exit) refusal test across all AC-1-enumerated mutating subcommands -- read-only-guard.test.ts's direct-import tests satisfy AC-5 but not AC-1's literal 'it exits non-zero' wording, which is a claim about the cadence <command> process. Also flagged AC-3 as thin (only decision add / recommendation add / recommendation list exercised, not every enumerated command). Added 11 new real-CLI-subprocess tests to read-only-mode.test.ts: 7 for 289-01/AC-1 (decision add, decision supersede-as-transition, assumption add, assumption validate-as-transition, milestone propose, intelligence reconcile, recommendation add -- each asserting non-zero exit, the guard's message on stderr, and the ledger file either absent or byte-unchanged) and 4 for 289-01/AC-3 covering the same enumerated set with CADENCE_READ_ONLY unset (decision supersede, assumption add+validate, milestone propose, intelligence reconcile -- each asserting success). Probed exact CLI stdout/stderr shapes empirically first (scratchpad probe scripts) before writing assertions, per this repo's 'measure, never predict' rule. Deep-verify's separate observation that 'cadence settle catches a guard refusal while advancing a recommendation, then succeeds silently' is a distinct, real, pre-existing gap in settle.ts outside this phase's declared file boundaries -- filed as rec-20260822-004 (not fixed in-phase) and cross-referenced from docs/reference/commands.md's CADENCE_READ_ONLY section as a known gap; not treated as an AC-1 violation since cadence settle itself is not one of AC-1's named subcommands. Re-verified: typecheck clean, full suite 447/4383 green (was 446/4372; +11 new tests, +1 test file entry recount), doc-content tests green, cadence verify coverage --explain now reports SATISFIED for AC-1 and AC-3 (previously the deep-verifier's own read-only-mode.test.ts assertions were thinner; now every AC-1-enumerated subcommand has a real subprocess test).",
+      "execution": "dispatch",
+      "isolation": "none",
+      "modelClass": "complex"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "Updated packet.ts's forbidden-actions prose to name CADENCE_READ_ONLY and state enforcement is now structural, without overclaiming per-dispatch process isolation (AC-6). Added docs/reference/commands.md 'Environment variables / CADENCE_READ_ONLY' section documenting the mechanism, gotchas, and empirically-proven scoping limits from T4's investigation. docs/host-adapters.md judged out of scope (HostAdapter-contract-only doc, confirmed by independent review). AC-5 judged already satisfied functionally by T1's direct-import guard tests; independent review's Critical finding (bare AC-N tokens fail this repo's phase-qualified coverage gate) required qualifying every 289-01 test's AC token to 289-01/AC-N across read-only-guard.test.ts, read-only-mode.test.ts, milestone.test.ts, and packet.test.ts -- done as part of this recording, plus one doc accuracy fix (milestone close was missing from the blocked-subcommands list) and a PROGRESS.json bookkeeping reconciliation (T3's work had not been recorded; T4's touchedFiles had picked up T2's in-flight file due to recording-order timing). Two golden-fixture files (packet.test.ts, pre-dp-a-plan.json) required re-pinning since packet.ts's byte-exact rendered output changed; added to this task's declared files: (documented deviation, not a boundary bypass). Re-verified after fixes: cadence verify coverage --explain reports SATISFIED for AC-1/2/3/5/6; AC-4 correctly stays NOT SATISFIED (proof-only, no automatable test -- evidenced via T4's real-dispatch PROGRESS.json record, to be settled via --ac override citing that evidence). Full suite 446/4372 green, typecheck clean, doc-content tests green (215+7+3).",
+      "execution": "dispatch",
+      "isolation": "worktree",
+      "modelClass": "complex"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "AC-4 verbatim capture (amended per whole-branch review finding: prior note was a paraphrase, not the DRAFT's required verbatim capture). Second dispatch attempt's literal output: printenv CADENCE_READ_ONLY -> '1' (exit 0, confirming inheritance purely via .claude/settings.json's env block, not set by the child itself). cadence init's internal provider-selection decision write hit the guard first: 'cadence init: could not record the provider-selection decision (CADENCE_READ_ONLY is set -- refusing \"addIntelligenceDecision\" (intelligence ledger write blocked). Unset CADENCE_READ_ONLY to allow ledger mutations.) -- continuing; the scaffold itself is unaffected.' (init exited 0, non-fatal by design). Then the explicit test command: 'node .../cadence.cjs decision add --title t4-v2-proof-mutation --rationale ...' produced stderr 'decision add failed: CADENCE_READ_ONLY is set -- refusing \"addIntelligenceDecision\" (intelligence ledger write blocked). Unset CADENCE_READ_ONLY to allow ledger mutations.', exit code 1. Subsequent 'cat .cadence/intelligence/decisions.json' -> 'cat: .cadence/intelligence/decisions.json: No such file or directory' -- the file was never created. Two independent instances of the guard firing inside the dispatched child (init's internal write, and the explicit decision add), both refused, both verbatim-captured here. First dispatch attempt (inline env-prefix methodology, not settings.json propagation) is left in the historical record as-is -- honest account of the self-disclosed gap and the redo, not erased.",
+      "execution": "dispatch",
+      "isolation": "none",
+      "modelClass": "mechanical"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "coverageScheme": "phase-qualified",
+  "coverageMode": "assertion",
+  "deepVerify": {
+    "AC-1": {
+      "pass": false,
+      "reason": "Guards cover core write paths, but linked tests do not exercise every listed mutating CLI subcommand or prove unchanged hashes of existing ledger files.",
+      "provider": "host-cli"
+    },
+    "AC-2": {
+      "pass": false,
+      "reason": "Only linked test exercises context handoff. No referenced test covers recommend, inspect, recommendation list, or next and their derived outputs.",
+      "provider": "host-cli"
+    },
+    "AC-3": {
+      "pass": false,
+      "reason": "Linked tests cover only decision add and writeMilestoneLedger unset; they do not establish byte-identical behavior for every guarded entry point and CLI command.",
+      "provider": "host-cli"
+    },
+    "AC-4": {
+      "pass": false,
+      "reason": "No supplied linked test captures a real Agent-dispatched child's exit code/output after settings.json env propagation.",
+      "provider": "host-cli"
+    },
+    "AC-5": {
+      "pass": true,
+      "reason": "Guards are in direct store writes and writeLedger; linked tests directly import writeLedger and writeIntelligenceLedgers under the env and prove refusal/no write.",
+      "provider": "host-cli"
+    },
+    "AC-6": {
+      "pass": true,
+      "reason": "Packet adds CADENCE_READ_ONLY store-layer enforcement prose, states it conditionally, and refers to scoping limits; the linked exact-render test exercises it.",
+      "provider": "host-cli"
+    }
+  },
+  "deepVerifyMeta": {
+    "diffProvided": true,
+    "diffBytes": 37093,
+    "truncated": false,
+    "filesCount": 27,
+    "provider": "host-cli"
+  },
+  "codeReview": {},
+  "gateBypasses": [
+    {
+      "gate": "settle",
+      "flag": "--force",
+      "reason": "settle --force bypassed failing verdicts (deep: AC-1, AC-2, AC-3, AC-4)",
+      "severity": "error"
+    },
+    {
+      "gate": "evidence-floor:AC-4",
+      "flag": "--evidence-floor-bypass",
+      "reason": "proof-only task per the DRAFT's own Boundaries (T4 declares files: none) -- structurally cannot be automated-tested, since the thing being proven is that a dispatched child process refuses a write; the only real evidence is a captured real-dispatch transcript, recorded verbatim in T4's PROGRESS.json note per the DRAFT's own stop: condition. Deep-verify structurally cannot observe this AC either (no linked tests exist to point it at), consistent with the SPEC's own Open Questions framing of AC-4 as proof-only from the start.",
+      "severity": "warn"
+    }
+  ],
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 99,
+    "sessionSubagentSpawns": 182
+  },
+  "assurance": {
+    "verifierRollup": [
+      {
+        "provider": "host-cli",
+        "gateCount": 1
+      }
+    ],
+    "evidenceTally": {
+      "ai-verified": 2,
+      "executed": 3,
+      "assertion": 0,
+      "mention": 0,
+      "unverified": 1
+    },
+    "overall": "mixed"
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "ecaced52f14cb6f013a6317fca056ee8950ed8c4317b1e17bb48ef771cd4fd06"
+  }
+}

@@ -6,7 +6,8 @@ export type CadenceErrorCode =
   | 'LOOP_VIOLATION'
   | 'STATE_CONFLICT'
   | 'COHERENCE_FAILED'
-  | 'HOOK_FAILED';
+  | 'HOOK_FAILED'
+  | 'READ_ONLY_MODE_BLOCKED';
 
 export class CadenceError extends Error {
   readonly code: CadenceErrorCode;

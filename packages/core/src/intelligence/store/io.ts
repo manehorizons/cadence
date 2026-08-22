@@ -16,6 +16,7 @@ import {
   readIntelligenceDecisionLedger,
   writeIntelligenceDecisionLedger,
 } from './decisions.js';
+import { assertNotReadOnly } from './read-only-guard.js';
 
 // Retired (phase 220 T4): `readAssumptionLedger`/`writeAssumptionLedger` and
 // `readIntelligenceDecisionLedger`/`writeIntelligenceDecisionLedger` used to
@@ -53,6 +54,7 @@ export async function writeIntelligenceLedgers(
   ledger: RecommendationLedger,
   evidenceLedger: EvidenceLedger,
 ): Promise<void> {
+  assertNotReadOnly('writeIntelligenceLedgers');
   await writeLedger(recommendationLedgerSpec, recommendationsPath(root), ledger, { mode: 0o600 });
   await writeLedger(evidenceLedgerSpec, evidencePath(root), evidenceLedger, { mode: 0o600 });
   // Read sibling ledgers so the rec MD renders status-annotated link bullets (Slice 15).
@@ -65,6 +67,7 @@ export async function writeIntelligenceLedgers(
 }
 
 export async function rerenderRecommendationsMdIfPresent(root: string): Promise<void> {
+  assertNotReadOnly('rerenderRecommendationsMdIfPresent');
   if (!existsSync(recommendationsPath(root))) return;
   const recLedger = await readRecommendationLedger(root);
   const evLedger = await readEvidenceLedger(root);
