@@ -2,39 +2,6 @@
   "schemaVersion": 1,
   "recommendations": [
     {
-      "id": "rec-20260701-001",
-      "title": "Make the default install enforce what the tutorial demonstrates",
-      "summary": "Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, init never derives verification.testCommand (build-test-must-pass passes silently), all verifier seams are mock. Fix: default coverageMode=assertion for new inits, derive testCommand from package.json scripts.test, print a loud settle notice when no testCommand exists.",
-      "source": "manual",
-      "status": "converted",
-      "readiness": "needs-decision",
-      "priority": "critical",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "gates",
-        "init",
-        "verification"
-      ],
-      "affectedFiles": [
-        "packages/types/src/config.ts",
-        "packages/core/src/init/plan.ts",
-        "packages/core/src/gates/build-test-must-pass.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260701-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "139-default-install-enforces-what-the-tutorial-demonstrates",
-      "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:56:35.797Z",
-      "updatedAt": "2026-07-02T03:24:53.670Z"
-    },
-    {
       "id": "rec-20260710-003",
       "title": "MCP-driven inversion: host CLI calls into cadence mcp serve's verify tool",
       "summary": "Alternative to shelling out to the host CLI: instead run the host CLI headlessly and have IT call into cadence's own MCP verify tool, using the host's native tool-calling to enforce the per-AC verdict schema rather than parsing freeform JSON from a subprocess. Worth prototyping against rec-20260710-002's direct-subprocess approach before committing -- tool-call-constrained output may be materially more reliable than prompt-and-parse, at the cost of a more unusual control-flow (host CLI as the driver, cadence as the callee).",
@@ -680,12 +647,13 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260730-001"
+        "ev-20260730-001",
+        "ev-20260822-004"
       ],
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-07-30T23:24:04.105Z",
-      "updatedAt": "2026-07-30T23:24:04.105Z"
+      "updatedAt": "2026-08-22T00:16:14.136Z"
     },
     {
       "id": "rec-20260731-007",
@@ -743,36 +711,6 @@
       "scoutId": "scout-20260730-opus-gap-review",
       "createdAt": "2026-07-31T02:11:27.207Z",
       "updatedAt": "2026-07-31T02:11:27.207Z"
-    },
-    {
-      "id": "rec-20260731-003",
-      "title": "Gate provenance doesn't distinguish a mock-downgraded AI review from a genuinely-ran one",
-      "summary": "GateProvenanceZ (packages/types/src/summary.ts:63-71) has only {gate, status: ran|skipped|refused, skipReason, reason} -- no field records which provider actually served a status:'ran' gate. registry.ts's fallback branch (line 187, gates.push({gate, status:'ran'})) records code-review/security-audit/deep-verify identically whether a real provider or a silently mock-downgraded one served them, unlike the skipReason pattern already used for buildTestBypassed/boundaryScanBypassed/coverageBypassed a few lines above. Verified on main 2026-07-31: no verifierIdentity or equivalent provider-carrying field exists yet in GateProvenanceZ -- issue #331 referenced 'phase 232' adding this, but that phase's artifacts live on the feat/kernel-assurance-v2 branch, not main. Overlaps rec-20260727-001 (SUMMARY.codeReview/.securityAudit persisting findings as bare arrays, discarding provider/model) -- that rec is about per-finding provenance inside the review result payload; this one is about the top-level GateProvenance ran/skipped record. Reconcile scope between the two before spec'ing either.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core",
-        "types"
-      ],
-      "affectedFiles": [
-        "packages/types/src/summary.ts",
-        "packages/core/src/gates/registry.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260731-003",
-        "ev-20260801-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-07-31T21:56:05.738Z",
-      "updatedAt": "2026-08-01T00:58:56.351Z"
     },
     {
       "id": "rec-20260731-004",
@@ -1069,12 +1007,13 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260802-018"
+        "ev-20260802-018",
+        "ev-20260822-006"
       ],
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-08-02T23:33:26.220Z",
-      "updatedAt": "2026-08-02T23:33:26.220Z"
+      "updatedAt": "2026-08-22T00:21:41.104Z"
     },
     {
       "id": "rec-20260803-001",
@@ -1384,41 +1323,6 @@
       "updatedAt": "2026-08-06T02:14:04.129Z"
     },
     {
-      "id": "rec-20260806-004",
-      "title": "Real-provider verification gates (code-review, security-audit) silently produce empty findings when their touched files are already committed before settle runs",
-      "summary": "Every diff-scoped verifier gate builds its input from ctx.diff() = git diff HEAD -- <touchedFiles> (see packages/core/src/gates/code-review.ts, security-audit.ts). If those files are already committed (no working-tree delta vs HEAD), the diff is empty, and both HostCliSecurityAuditVerifier.verify and the equivalent code-review path early-return {findings: []} without ever spawning a real provider call to judge anything -- no error, no warning, a normal-looking 'ran' gate status with provider: host-cli in the persisted SUMMARY, and assurance.overall can still reach 'strong'. This is silent: nothing distinguishes 'gate ran and found nothing' from 'gate never actually reviewed anything because the diff was empty by construction'. Concretely hit during phase 256's real-provider certification (2026-08-06): the seeded-defect fixture was committed in a WIP prep commit before the real settle ran, so security-audit's real codex call saw an empty diff and returned no findings on an objectively hardcoded credential its own system prompt calls CRITICAL (bullet 1) -- producing a false 'strong' assurance record (256-01-SUMMARY.json) that looked like a valid real-provider pass. code-review's one finding in that same settle was real, but only because CONDUCTION-RUNBOOK.md had uncommitted edits -- it was the only file with an actual diff. This is a general trap for ANY future real-provider conduction attempt, not specific to phase 256: an operator following docs/providers.md's documented procedure would hit this whenever the phase's own artifacts happen to already be committed at settle time. Consider: a loud warning (or refuse) when a code-review/security-audit gate's provider is non-mock but its diff is empty and touchedFiles is non-empty (as distinct from the already-handled empty-touchedFiles case), so an empty-diff false pass can never look identical to a genuine clean pass.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core"
-      ],
-      "affectedFiles": [
-        "packages/core/src/gates/code-review.ts",
-        "packages/core/src/gates/security-audit.ts",
-        "packages/core/src/verify/security-audit.ts",
-        "packages/core/src/verify/code-review.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260806-004",
-        "ev-20260806-005",
-        "ev-20260806-006"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [
-        "dec-20260806-001"
-      ],
-      "scoutId": "scout-20260806-phase256-prep",
-      "createdAt": "2026-08-06T02:32:59.249Z",
-      "updatedAt": "2026-08-06T03:12:03.038Z"
-    },
-    {
       "id": "rec-20260806-005",
       "title": "Code-review finding (medium): The Step 3 \"stop and report\" path bypasses Step 6, leaving securityAudit.provid…",
       "summary": "medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:180: The Step 3 \"stop and report\" path bypasses Step 6, leaving securityAudit.provider set to host-cli and the baseline config invalid.",
@@ -1468,12 +1372,13 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260806-009"
+        "ev-20260806-009",
+        "ev-20260822-007"
       ],
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-08-06T05:30:55.570Z",
-      "updatedAt": "2026-08-06T05:30:55.570Z"
+      "updatedAt": "2026-08-22T00:21:41.358Z"
     },
     {
       "id": "rec-20260806-007",
@@ -1973,33 +1878,6 @@
       "updatedAt": "2026-08-13T00:13:36.285Z"
     },
     {
-      "id": "rec-20260813-002",
-      "title": "SUMMARY.json cannot distinguish operator-configured mock from a silent host-cli verifier fallback",
-      "summary": "verify/verifier-factory.ts's wrapWithFallback (createVerifierFactory) transparently redirects any HostCliError (self-invocation, binary-not-found, spawn error, unparseable output) to MockVerifier, tagging the result providerSelection:'fallback'. That tag is set non-enumerable, so it never serializes into SUMMARY.json's gates array or deepVerifyMeta -- a durable settle artifact carrying provider:'mock' looks byte-identical whether the operator genuinely configured mock or a real host-cli call silently failed mid-settle. Confirmed empirically during phase 274's own build: its final accepted 274-01-SUMMARY.json shows deepVerify provider:'mock' for all 6 ACs with MockVerifier's own deterministic reason-string format, even though .cadence/config.json configures verifier.provider:'host-cli' and this exact settle run's own code-review gate (same run, same diff) DID succeed via real host-cli moments earlier -- deep-verify's specific call independently hit its own HostCliError. This is a real instance of this repo's own 'Quiet Fallback' failure mode (CLAUDE.md): every fallback is supposed to print a loud stderr notice and/or record provenance in the SUMMARY; this one does neither in the durable artifact. Did not block phase 274 (assurance.evidenceTally showed ai-verified:0, executed:6 -- no AC's PASS rested on the mock deep-verify judgment), but the gap means an operator reading a settled SUMMARY.json cannot tell 'real AI verification happened' from 'it silently fell back' without cross-referencing stderr logs from the original run, which aren't retained.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core/verify"
-      ],
-      "affectedFiles": [
-        "packages/core/src/verify/verifier-factory.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260813-002"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-08-13T00:34:49.307Z",
-      "updatedAt": "2026-08-13T00:34:49.307Z"
-    },
-    {
       "id": "rec-20260813-003",
       "title": "classifyAcObservability's SUMMARY_TOKEN regex lacks a trailing word-boundary guard (SUMMARYFOO/SUMMARYs still match as bare SUMMARY)",
       "summary": "verify/criteria-observability.ts's SUMMARY_TOKEN regex (/\\bSUMMARY(?:\\.(?:json|md)\\b)?(?!\\.\\w)/g) was fixed this phase (274) to stop matching SUMMARY.mdx/SUMMARY.yaml (a real code-review HIGH finding) via a (?!\\.\\w) negative lookahead guarding the dot-extension case specifically. An independent whole-branch review of that fix found the guard doesn't extend to a trailing word-boundary in general: text containing SUMMARY_TOKEN, SUMMARYFOO, or SUMMARYs still matches as a bare SUMMARY token, since the lookahead only excludes a following '.'+word-char, not any following word character. A full real-corpus scan (1237 parseable DRAFT ACs) found exactly one occurrence of this shape (244-01-DRAFT.md AC-2's 'pre-existing SUMMARYs') and it produced zero false positive, since it doesn't sit near any of the classifier's narrow trigger phrases -- so this is a real but currently benign gap, same root-cause family as rec-20260812-002's negation-boundary fragility (both are edge cases in the classifier's structural pattern-matching, deferred per D-G's staged-rollout rationale rather than fixed, given zero real-corpus manifestation).",
@@ -2350,6 +2228,36 @@
       "decisionIds": [],
       "createdAt": "2026-08-21T23:07:13.195Z",
       "updatedAt": "2026-08-21T23:07:27.934Z"
+    },
+    {
+      "id": "rec-20260822-001",
+      "title": "A non-numeric AC heading (e.g. AC-K1) silently zeroes a DRAFT's entire AC chain, and 4 separate checks report clean anyway",
+      "summary": "packages/core/src/parse/draft-parser.ts:34's heading regex (/^### (AC-\\d+):/) and packages/core/src/verify/coverage.ts:53's token regex (AC_TOKEN_RE = /\\bAC-\\d+\\b/g) both require purely numeric AC ids. A hand-authored DRAFT.md with headings like '### AC-K1: ...' (mirroring an operator handoff doc's own K-lettered AC naming, e.g. HANDOFF-verifier-honesty-verify-premises.md's AC-K1..AC-K5) parses to ZERO Acceptance Criteria -- silently, no error. Confirmed live 2026-08-21/22 building phase 287: 'cadence draft check' reported coherence: OK on the zero-AC draft; the subsequent settle produced acResults: [] and assurance.overall: 'unverified', with structural-verifier, test-coverage, and --auto's own completeness check (blocks on incomplete ACs) ALL passing vacuously, since there was nothing to check against. The real source fix underneath was correct and independently reviewed, but the phase RECORD would have entered git history claiming zero verified ACs while 3 gates reported PASS -- the exact self-report-trust failure mode this repo's own CLAUDE.md names. Caught only because the settled SUMMARY.json was inspected by hand before committing (the settle itself was never pushed; re-done cleanly). Consider: cadence draft check (or draft-parser itself) should refuse/warn loudly when a DRAFT's '## Acceptance Criteria' section is non-empty but yields zero parsed ### AC-N blocks -- a strong structural signal of exactly this defect, cheap to detect without any semantic understanding of the content.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "parse",
+        "coherence-check"
+      ],
+      "affectedFiles": [
+        "packages/core/src/parse/draft-parser.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260822-008"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260821-verifier-honesty",
+      "createdAt": "2026-08-22T00:49:19.399Z",
+      "updatedAt": "2026-08-22T00:49:19.399Z"
     }
   ],
   "archived": [
@@ -8608,6 +8516,157 @@
       "archiveReason": "rejected",
       "createdAt": "2026-08-21T04:44:13.950Z",
       "updatedAt": "2026-08-21T22:47:05.329Z"
+    },
+    {
+      "id": "rec-20260731-003",
+      "title": "Gate provenance doesn't distinguish a mock-downgraded AI review from a genuinely-ran one",
+      "summary": "GateProvenanceZ (packages/types/src/summary.ts:63-71) has only {gate, status: ran|skipped|refused, skipReason, reason} -- no field records which provider actually served a status:'ran' gate. registry.ts's fallback branch (line 187, gates.push({gate, status:'ran'})) records code-review/security-audit/deep-verify identically whether a real provider or a silently mock-downgraded one served them, unlike the skipReason pattern already used for buildTestBypassed/boundaryScanBypassed/coverageBypassed a few lines above. Verified on main 2026-07-31: no verifierIdentity or equivalent provider-carrying field exists yet in GateProvenanceZ -- issue #331 referenced 'phase 232' adding this, but that phase's artifacts live on the feat/kernel-assurance-v2 branch, not main. Overlaps rec-20260727-001 (SUMMARY.codeReview/.securityAudit persisting findings as bare arrays, discarding provider/model) -- that rec is about per-finding provenance inside the review result payload; this one is about the top-level GateProvenance ran/skipped record. Reconcile scope between the two before spec'ing either.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "types"
+      ],
+      "affectedFiles": [
+        "packages/types/src/summary.ts",
+        "packages/core/src/gates/registry.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260731-003",
+        "ev-20260801-001",
+        "ev-20260822-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260822-001"
+      ],
+      "shippedRef": "phase 232 / PR #327 (2026-07-27) + phase 263 (providerSelection); dec-20260822-001, dec-20260808-008",
+      "archivedAt": "2026-08-22T00:15:26.568Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-31T21:56:05.738Z",
+      "updatedAt": "2026-08-22T00:15:26.568Z"
+    },
+    {
+      "id": "rec-20260701-001",
+      "title": "Make the default install enforce what the tutorial demonstrates",
+      "summary": "Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, init never derives verification.testCommand (build-test-must-pass passes silently), all verifier seams are mock. Fix: default coverageMode=assertion for new inits, derive testCommand from package.json scripts.test, print a loud settle notice when no testCommand exists.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "critical",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "init",
+        "verification"
+      ],
+      "affectedFiles": [
+        "packages/types/src/config.ts",
+        "packages/core/src/init/plan.ts",
+        "packages/core/src/gates/build-test-must-pass.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260701-001",
+        "ev-20260822-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "139-default-install-enforces-what-the-tutorial-demonstrates",
+      "shippedRef": "phase 139 (139-01-SUMMARY.json, all ACs pass); extended by phase 166",
+      "scoutId": "scout-20260701-audit",
+      "archivedAt": "2026-08-22T00:16:07.412Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-01T23:56:35.797Z",
+      "updatedAt": "2026-08-22T00:16:07.412Z"
+    },
+    {
+      "id": "rec-20260813-002",
+      "title": "SUMMARY.json cannot distinguish operator-configured mock from a silent host-cli verifier fallback",
+      "summary": "verify/verifier-factory.ts's wrapWithFallback (createVerifierFactory) transparently redirects any HostCliError (self-invocation, binary-not-found, spawn error, unparseable output) to MockVerifier, tagging the result providerSelection:'fallback'. That tag is set non-enumerable, so it never serializes into SUMMARY.json's gates array or deepVerifyMeta -- a durable settle artifact carrying provider:'mock' looks byte-identical whether the operator genuinely configured mock or a real host-cli call silently failed mid-settle. Confirmed empirically during phase 274's own build: its final accepted 274-01-SUMMARY.json shows deepVerify provider:'mock' for all 6 ACs with MockVerifier's own deterministic reason-string format, even though .cadence/config.json configures verifier.provider:'host-cli' and this exact settle run's own code-review gate (same run, same diff) DID succeed via real host-cli moments earlier -- deep-verify's specific call independently hit its own HostCliError. This is a real instance of this repo's own 'Quiet Fallback' failure mode (CLAUDE.md): every fallback is supposed to print a loud stderr notice and/or record provenance in the SUMMARY; this one does neither in the durable artifact. Did not block phase 274 (assurance.evidenceTally showed ai-verified:0, executed:6 -- no AC's PASS rested on the mock deep-verify judgment), but the gap means an operator reading a settled SUMMARY.json cannot tell 'real AI verification happened' from 'it silently fell back' without cross-referencing stderr logs from the original run, which aren't retained.",
+      "source": "manual",
+      "status": "rejected",
+      "readiness": "needs-evidence",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core/verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/verifier-factory.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260813-002",
+        "ev-20260822-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260822-004"
+      ],
+      "archivedAt": "2026-08-22T00:16:27.293Z",
+      "archiveReason": "rejected",
+      "createdAt": "2026-08-13T00:34:49.307Z",
+      "updatedAt": "2026-08-22T00:16:27.293Z"
+    },
+    {
+      "id": "rec-20260806-004",
+      "title": "Real-provider verification gates (code-review, security-audit) silently produce empty findings when their touched files are already committed before settle runs",
+      "summary": "Every diff-scoped verifier gate builds its input from ctx.diff() = git diff HEAD -- <touchedFiles> (see packages/core/src/gates/code-review.ts, security-audit.ts). If those files are already committed (no working-tree delta vs HEAD), the diff is empty, and both HostCliSecurityAuditVerifier.verify and the equivalent code-review path early-return {findings: []} without ever spawning a real provider call to judge anything -- no error, no warning, a normal-looking 'ran' gate status with provider: host-cli in the persisted SUMMARY, and assurance.overall can still reach 'strong'. This is silent: nothing distinguishes 'gate ran and found nothing' from 'gate never actually reviewed anything because the diff was empty by construction'. Concretely hit during phase 256's real-provider certification (2026-08-06): the seeded-defect fixture was committed in a WIP prep commit before the real settle ran, so security-audit's real codex call saw an empty diff and returned no findings on an objectively hardcoded credential its own system prompt calls CRITICAL (bullet 1) -- producing a false 'strong' assurance record (256-01-SUMMARY.json) that looked like a valid real-provider pass. code-review's one finding in that same settle was real, but only because CONDUCTION-RUNBOOK.md had uncommitted edits -- it was the only file with an actual diff. This is a general trap for ANY future real-provider conduction attempt, not specific to phase 256: an operator following docs/providers.md's documented procedure would hit this whenever the phase's own artifacts happen to already be committed at settle time. Consider: a loud warning (or refuse) when a code-review/security-audit gate's provider is non-mock but its diff is empty and touchedFiles is non-empty (as distinct from the already-handled empty-touchedFiles case), so an empty-diff false pass can never look identical to a genuine clean pass.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/code-review.ts",
+        "packages/core/src/gates/security-audit.ts",
+        "packages/core/src/verify/security-audit.ts",
+        "packages/core/src/verify/code-review.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260806-004",
+        "ev-20260806-005",
+        "ev-20260806-006",
+        "ev-20260822-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260806-001",
+        "dec-20260822-002",
+        "dec-20260822-003",
+        "dec-20260822-006",
+        "dec-20260822-007",
+        "dec-20260822-008",
+        "dec-20260822-009"
+      ],
+      "convertedToPhaseId": "287-assurance-grade-reads-providerselection-empty-diff-gates-no-longer-earn-strong-alone",
+      "shippedRef": "phase 287, this commit",
+      "scoutId": "scout-20260806-phase256-prep",
+      "archivedAt": "2026-08-22T00:44:06.106Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-06T02:32:59.249Z",
+      "updatedAt": "2026-08-22T00:44:06.106Z"
     }
   ]
 }

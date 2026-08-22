@@ -292,4 +292,39 @@ describe('283-01 corpus drift scan (AC-5): historical *-SUMMARY.json read-only r
       expect(report).toContain(`${rec.phaseDir}/${rec.id}`);
     }
   });
+
+  /**
+   * Phase 287 (287-01, AC-5): `hasRealVerifier` (the D-Z fix) can only ever
+   * diverge from its pre-287 form on a record carrying at least one gate
+   * entry tagged `providerSelection:'empty-diff'` -- the new predicate is a
+   * strict subset of the old one, differing only on that one condition. So
+   * `computeCorpus()`'s live re-derivation (which already runs the current,
+   * 287-fixed `deriveAssuranceRecord` against every historical record and is
+   * asserted above to introduce 0 drift beyond the committed 283 whitelist)
+   * combined with a direct 0-count check on `providerSelection:'empty-diff'`
+   * across the same corpus is the complete AC-5 proof: zero records could
+   * possibly be affected by this phase's change, and the drift test above
+   * already confirms none newly are. Reuses this file's own
+   * `walkSummaryFiles` rather than a third duplicate corpus walker.
+   */
+  it('287-01/AC-5: 0 records in the corpus carry providerSelection:\'empty-diff\' on any gate entry -- the D-Z fix structurally cannot change any historical grade', () => {
+    const files = walkSummaryFiles(PHASES_DIR);
+    expect(files.length).toBeGreaterThan(0);
+
+    const emptyDiffRecords: string[] = [];
+    for (const path of files) {
+      let json: unknown;
+      try {
+        json = JSON.parse(readFileSync(path, 'utf8'));
+      } catch {
+        continue;
+      }
+      const rec = json as { gates?: Array<{ providerSelection?: string }> };
+      if ((rec.gates ?? []).some((g) => g.providerSelection === 'empty-diff')) {
+        emptyDiffRecords.push(path);
+      }
+    }
+
+    expect(emptyDiffRecords, `records carrying empty-diff: ${emptyDiffRecords.join(', ')}`).toEqual([]);
+  });
 });
