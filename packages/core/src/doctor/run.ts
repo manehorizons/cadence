@@ -20,6 +20,7 @@ import {
   type RecommendationLedger,
   type RecommendationStatus,
   type PackManifest,
+  COMMAND_GUIDANCE,
 } from '@thomas-powers-jr/cadence-types';
 import { checkNodeMajor } from '../cli/node-guard.js';
 import { loadConfig } from '../config/loader.js';
@@ -1384,6 +1385,75 @@ export async function checkPacks(root: string): Promise<DoctorCheck> {
 }
 
 /**
+ * Doctor-checked only, never enforced (D-AP): verifies each resolved pack's
+ * declared `commands[]` entries (slash-command names, docs/packs-design.md
+ * §3) name a key of `COMMAND_GUIDANCE` (`@thomas-powers-jr/cadence-types`)
+ * — the registered slash-command set. There is deliberately no Gate entry,
+ * no DELTAS cell, and no refusal path for this; severity never escalates
+ * past `warning` and `fixId` is always `null` — inventing or removing a
+ * pack's declared commands is not a safe automatic repair.
+ *
+ * Mirrors {@link checkPacks} exactly: `loadConfig` + `resolvePacks`, degrade
+ * to `pass` on any load failure, branch on the RESOLVED pack list (not
+ * `config.packs.enabled.length` — an id in both `enabled` and `disabled` is
+ * excluded by `resolvePacks`, disabled wins, D-AQ). An absent or empty
+ * `commands` field is clean, not a finding.
+ */
+export async function checkPackCommands(root: string): Promise<DoctorCheck> {
+  let resolved: ResolvedPack[];
+  try {
+    const config = await loadConfig(root);
+    resolved = await resolvePacks(root, config);
+  } catch {
+    return pass('pack-commands', 'Pack resolution not determinable (best-effort) — skipped.');
+  }
+
+  if (resolved.length === 0) {
+    return pass('pack-commands', 'No packs enabled (ids listed in packs.disabled are excluded).');
+  }
+
+  const ok = resolved.filter((p): p is Extract<ResolvedPack, { manifest: PackManifest }> =>
+    'manifest' in p,
+  );
+  const registered = new Set(Object.keys(COMMAND_GUIDANCE));
+
+  const offenders: { id: string; unknown: string[] }[] = [];
+  for (const p of ok) {
+    const commands = p.manifest.commands;
+    if (!commands || commands.length === 0) continue;
+    const unknown = commands.filter((c) => !registered.has(c));
+    if (unknown.length > 0) {
+      offenders.push({ id: p.id, unknown });
+    }
+  }
+
+  if (offenders.length === 0) {
+    // `ok.length === 0` here means every resolved pack failed to reach a
+    // manifest (e.g. all broken pack.json) — `checkPacks` already flags that
+    // loudly as `error`; avoid an awkward "for 0 enabled pack(s): ." message.
+    return pass(
+      'pack-commands',
+      ok.length > 0
+        ? `All declared commands[] entries resolved for ${ok.length} enabled pack(s): ${ok
+            .map((p) => p.id)
+            .join(', ')}.`
+        : 'No resolved pack to check (see the packs check for resolution errors).',
+    );
+  }
+
+  const detail = offenders
+    .map((o) => `${o.id} — unrecognized command(s): ${o.unknown.join(', ')}`)
+    .join('; ');
+  return fail(
+    'pack-commands',
+    'warning',
+    `${offenders.length} enabled pack(s) declare a commands[] entry not in the registered slash-command set: ${detail}.`,
+    'Fix the pack.json commands[] entries to name real slash-commands (a key of COMMAND_GUIDANCE), or remove the unrecognized name(s).',
+    null,
+  );
+}
+
+/**
  * Warn threshold for {@link checkPhaseFreshness} (Phase 208, rec-20260722-001):
  * a task `updatedAt` within this many ms of `now` is treated as possible
  * live concurrent-session activity. 10 minutes. Hardcoded and documented,
@@ -2493,6 +2563,7 @@ export async function runDoctor(
     await checkLedgerRemoteCollision(root),
     await checkCoverageModeLanguageSupport(root),
     await checkPacks(root),
+    await checkPackCommands(root),
     await checkRoadmapCurrency(root),
     await checkReleaseCurrency(root),
   ];

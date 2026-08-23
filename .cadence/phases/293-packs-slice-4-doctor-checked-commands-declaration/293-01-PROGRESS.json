@@ -1,0 +1,40 @@
+{
+  "draftId": "293-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "packages/core/src/doctor/run.ts"
+      ],
+      "updatedAt": "2026-08-23T15:23:09.729Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "packages/host-toolkit/tests/routing.test.ts"
+      ],
+      "updatedAt": "2026-08-23T15:27:11.864Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "packages/core/tests/doctor/packs.test.ts"
+      ],
+      "updatedAt": "2026-08-23T15:38:04.286Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "docs/packs-design.md",
+        "docs/reference/commands.md",
+        "packages/core/tests/docs/cli-reference.test.ts",
+        ".changeset/packs-slice-4-pack-commands-doctor-check.md"
+      ],
+      "updatedAt": "2026-08-23T15:49:38.020Z"
+    }
+  }
+}

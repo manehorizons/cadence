@@ -2354,34 +2354,6 @@
       "updatedAt": "2026-08-22T20:17:28.781Z"
     },
     {
-      "id": "rec-20260822-012",
-      "title": "Packs Slice 4 (stretch): declared-commands doctor check, non-enforced",
-      "summary": "A pack's commands[] (declared slash-command names) checked for presence by cadence doctor only -- never gate-enforced, matching D-AP's exclusion of commands from anything gate-shaped. May land after the rest of the packs arc closes; explicitly optional. See docs/packs-design.md §7 Slice 4.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "raw-idea",
-      "priority": "low",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core",
-        "doctor",
-        "packs"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260822-021"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260822-packs-design",
-      "createdAt": "2026-08-22T21:25:19.027Z",
-      "updatedAt": "2026-08-22T21:25:19.027Z"
-    },
-    {
       "id": "rec-20260823-001",
       "title": "doctor's assessGateReachability false-negatives on pack-added gates absent from a profile's raw matrix",
       "summary": "assessGateReachability (doctor/run.ts:1632) scans only raw gatesFor(tier,profile) across all tiers to decide a gate is 'blocked by profile' -- deliberately pack-unaware per docs/packs-design.md §4b, since it answers a matrix-wide question independent of any phase's active packs. But phase 292 (Packs Slice 3) confirmed the divergence is concretely reachable, not theoretical: security-audit is absent from all three standard cells and all three auto cells in DELTAS; code-review is absent from all three auto cells. Both are ordinary Gate members a pack can add via gates[].add. A pack declaring e.g. {profile:'standard', tier:'complex', add:['security-audit']} makes doctor report that gate as blocked-by-profile even though effectiveGateSet (engine.ts) now genuinely fires it once that pack is enabled -- a false negative in the doctor's own honesty tooling. Fixing this is out of Slice 3's scope per its DRAFT Boundaries (doctor/run.ts must not change); filed per the dec-20260820-003 file-only precedent for exactly this kind of out-of-scope-but-real gap.",
@@ -9082,6 +9054,37 @@
       "archiveReason": "shipped",
       "createdAt": "2026-08-22T21:25:18.852Z",
       "updatedAt": "2026-08-23T04:56:38.380Z"
+    },
+    {
+      "id": "rec-20260822-012",
+      "title": "Packs Slice 4 (stretch): declared-commands doctor check, non-enforced",
+      "summary": "A pack's commands[] (declared slash-command names) checked for presence by cadence doctor only -- never gate-enforced, matching D-AP's exclusion of commands from anything gate-shaped. May land after the rest of the packs arc closes; explicitly optional. See docs/packs-design.md §7 Slice 4.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "doctor",
+        "packs"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260822-021"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260822-packs-design",
+      "createdAt": "2026-08-22T21:25:19.027Z",
+      "updatedAt": "2026-08-23T15:56:47.389Z",
+      "shippedRef": "293-packs-slice-4-doctor-checked-commands-declaration",
+      "archivedAt": "2026-08-23T15:56:47.389Z",
+      "archiveReason": "shipped"
     }
   ]
 }

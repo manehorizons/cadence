@@ -1,8 +1,9 @@
 # CADENCE Packs — Design (v1, internal-first)
 
 > **Status: Slice 1 shipped (phase 290); Slice 2 shipped (phase 291); Slice 3
-> shipped (phase 292).** As of Slice 1, `config.packs` is parsed and
-> resolved — `resolvePacks()` (`packages/core/src/packs/resolve.ts`)
+> shipped (phase 292); Slice 4 shipped (phase 293).** As of Slice 1,
+> `config.packs` is parsed and resolved —
+> `resolvePacks()` (`packages/core/src/packs/resolve.ts`)
 > validates each enabled id's `.cadence/packs/<id>/pack.json` against
 > `PackManifestZ` (`packages/types/src/pack.ts`), and `cadence doctor`'s
 > `packs` check surfaces whether each one resolves. As of Slice 2 a pack is
@@ -21,8 +22,10 @@
 > deltas into its output, at all 9 real call sites; `gatesFor` itself
 > remains untouched and pack-unaware — it stays the raw, packs-free (tier ×
 > profile) matrix builder, still free of any `packs/` import. A manifest's
-> `gates[]` shape is non-additive-rejected at parse time; only a
-> slash-command declaration (Slice 4) still has no effect. This document
+> `gates[]` shape is non-additive-rejected at parse time. As of Slice 4, a
+> pack's declared `commands[]` entries are doctor-checked against the
+> registered slash-command set (`Object.keys(COMMAND_GUIDANCE)`) — still
+> `cadence doctor`-only, `warning`, never enforced (D-AP). This document
 > remains the design record for the whole arc; §7 tracks which slice is
 > done. It is intentionally **not** indexed in `docs/README.md`.
 
@@ -356,9 +359,17 @@ time; `cadence config explain`'s current-tier row (not the whole-matrix
 table) reflects enabled packs' contribution, so the command that exists to
 answer "what's actually enforced" stays honest once packs are real.
 
-**Slice 4 (stretch — may land after this arc closes).**
-`commands` declaration checking via `cadence doctor` only — never enforced,
-matching D-AP's exclusion of commands from anything gate-shaped.
+**Slice 4 — `commands` declaration checking, doctor-only. Shipped (phase 293).**
+A pack's declared `commands[]` entries are checked against the registered
+slash-command set — never enforced, matching D-AP's exclusion of commands
+from anything gate-shaped.
+*Acceptance:* an enabled pack naming an unrecognized command in `commands[]`
+produces a `pack-commands` doctor `warning` naming the pack id and every
+unrecognized command, with `fixId: null`; the check never escalates past
+`warning` and has no Gate/DELTAS entry; the registered-command-set
+invariant (`COMMAND_GUIDANCE` keys vs. `COMMANDS.map(c => c.name)` in
+`packages/host-toolkit/src/routing.ts`) is pinned by a dedicated test so
+the two catalogs cannot silently drift apart.
 
 **Explicit non-goals for the whole arc**, not just this document: registry
 or remote source resolution, pack-on-pack dependencies, a public product
