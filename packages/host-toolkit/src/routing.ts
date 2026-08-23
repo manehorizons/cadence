@@ -15,6 +15,34 @@ export type { ExtractedPayload };
 export const EDIT_TOOL_MATCHER = 'Edit|Write|MultiEdit|NotebookEdit';
 export const SKILL_TOOL_MATCHER = 'Skill';
 
+/** One managed hook entry the Claude Code installer writes: which lifecycle
+ *  event, and which tool-matcher (`null` for a plain, unmatched entry). */
+export interface ExpectedManagedHook {
+  event: string;
+  matcher: string | null;
+}
+
+/**
+ * Canonical list of every managed hook entry `install.ts` writes into
+ * `.claude/settings.json` (phase 295). Single source of truth: `install.ts`
+ * builds its `desired` map from this list, and `cadence doctor`'s
+ * `checkHostHooks` (which cannot import this package — core never imports
+ * host code) holds its own independent copy, pinned against this one by a
+ * drift test in `packages/host-claude-code` (which depends on both). Two
+ * entries share the `PostToolUse` event — one per Phase 23.4's edit-tool and
+ * Skill-tool flows.
+ */
+export const CLAUDE_CODE_EXPECTED_HOOKS: readonly ExpectedManagedHook[] = [
+  { event: 'SessionStart', matcher: null },
+  { event: 'UserPromptSubmit', matcher: null },
+  { event: 'PreToolUse', matcher: EDIT_TOOL_MATCHER },
+  { event: 'PostToolUse', matcher: EDIT_TOOL_MATCHER },
+  { event: 'PostToolUse', matcher: SKILL_TOOL_MATCHER },
+  { event: 'Stop', matcher: null },
+  { event: 'SubagentStop', matcher: null },
+  { event: 'SubagentStart', matcher: null },
+];
+
 const EVENT_TABLE: Record<string, AbstractEvent> = {
   SessionStart: 'session-start',
   UserPromptSubmit: 'user-prompt',

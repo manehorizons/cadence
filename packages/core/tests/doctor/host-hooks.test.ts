@@ -10,6 +10,7 @@ import {
 } from '../../src/doctor/host-hooks.js';
 import { runDoctor } from '../../src/doctor/run.js';
 import { planFixes, applyFixes } from '../../src/doctor/fix.js';
+import { writeCompleteManagedSettings } from './host-hooks-fixture.js';
 
 const ENV = { nodeVersion: process.versions.node, platform: process.platform as NodeJS.Platform };
 
@@ -94,9 +95,14 @@ describe('stale-scope host hook detection (AC-5, phase 250)', () => {
   });
 
   // AC-5: cadence doctor flags the stale entry, and `--fix` re-runs install to repair it.
+  // Phase 295: a complete managed set (not a lone Stop entry) with one entry
+  // stale, so the new completeness check doesn't mask the staleness message
+  // this test actually exercises.
   it('250-01/AC-5: cadence doctor flags a stale-scope managed hook, and --fix re-runs install to repair it', async () => {
     active = await tempRepo({ initialized: true });
-    await writeSettings(active.root, JSON.stringify(settingsWith(OLD_SCOPE_COMMAND)));
+    await writeCompleteManagedSettings(active.root, [
+      { event: 'Stop', matcher: null, command: OLD_SCOPE_COMMAND },
+    ]);
 
     const before = await runDoctor(active.root, ENV);
     const beforeCheck = before.checks.find((c) => c.name === 'host-hooks');
@@ -116,8 +122,9 @@ describe('stale-scope host hook detection (AC-5, phase 250)', () => {
         calledWithRoot = root;
         // Simulate the real installHooks() repair (host-claude-code/src/install.ts's
         // mergeManagedHookEntries, which evicts every _managedBy: 'cadence' entry
-        // and re-writes it with the current command) rewriting the settings file.
-        await writeSettings(root, JSON.stringify(settingsWith(NEW_SCOPE_COMMAND)));
+        // and re-writes it with the current command) rewriting the settings file
+        // with a complete, fresh-scope set.
+        await writeCompleteManagedSettings(root);
         return 0;
       },
     });
@@ -133,5 +140,46 @@ describe('stale-scope host hook detection (AC-5, phase 250)', () => {
     const rewritten = await readFile(join(active.root, '.claude', 'settings.json'), 'utf8');
     expect(rewritten).toContain('@thomas-powers-jr/cadence-host-claude-code');
     expect(rewritten).not.toContain('@manehorizons');
+  });
+
+  // Phase 295 (AC-4, fix side): an incomplete managed install alongside a
+  // non-managed third-party entry (mirroring this repo's real
+  // `deja hook user-prompt-submit`) — --fix --wire-host repairs the
+  // completeness gap without touching the non-managed entry.
+  it('295-01/AC-4: --fix --wire-host completes a partial managed install and leaves a non-managed entry untouched', async () => {
+    active = await tempRepo({ initialized: true });
+    const thirdParty = { hooks: [{ type: 'command', command: 'deja hook user-prompt-submit' }] };
+    await writeCompleteManagedSettings(
+      active.root,
+      [
+        { event: 'PostToolUse', matcher: 'Skill', omit: true },
+        { event: 'SubagentStart', matcher: null, omit: true },
+      ],
+      { UserPromptSubmit: [thirdParty] },
+    );
+
+    const before = await runDoctor(active.root, ENV);
+    expect(before.checks.find((c) => c.name === 'host-hooks')?.severity).toBe('error');
+
+    const plan = planFixes(before);
+    const outcomes = await applyFixes(active.root, plan, { wireHost: true }, {
+      hostInstall: async (root) => {
+        // Simulate the real mergeManagedHookEntries repair: evict every
+        // `_managedBy: 'cadence'` entry per event and re-add the complete
+        // set, leaving every non-managed entry (like `thirdParty` above)
+        // untouched.
+        await writeCompleteManagedSettings(root, [], { UserPromptSubmit: [thirdParty] });
+        return 0;
+      },
+    });
+    expect(outcomes.find((o) => o.check === 'host-hooks')?.status).toBe('applied');
+
+    const after = await runDoctor(active.root, ENV);
+    const afterCheck = after.checks.find((c) => c.name === 'host-hooks');
+    expect(afterCheck?.severity).toBe('ok');
+    expect(afterCheck?.detail).not.toMatch(/deja/);
+
+    const rewritten = await readFile(join(active.root, '.claude', 'settings.json'), 'utf8');
+    expect(rewritten).toContain('deja hook user-prompt-submit');
   });
 });

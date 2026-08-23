@@ -2,7 +2,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { isCadenceManagedEntry, mergeManagedHookEntries } from '@thomas-powers-jr/cadence-host-toolkit/install-merge';
 import type { ManagedHookEntry } from '@thomas-powers-jr/cadence-host-toolkit/install-merge';
-import { EDIT_TOOL_MATCHER, SKILL_TOOL_MATCHER } from './event-map.js';
+import { CLAUDE_CODE_EXPECTED_HOOKS } from '@thomas-powers-jr/cadence-host-toolkit';
 import { resolveLocalPaths } from './locate-self.js';
 
 export interface InstallOptions {
@@ -89,17 +89,17 @@ export async function installHooks(root: string, opts: InstallOptions = {}): Pro
     _managedBy: 'cadence',
   });
 
-  // Phase 23.4 — PostToolUse has two cadence-managed entries: one for edit
-  // tools (post-tool-edit abstract) and one for the Skill tool (skill-invoke).
-  const desired: Record<string, HookEntry[]> = {
-    SessionStart: [plain()],
-    UserPromptSubmit: [plain()],
-    PreToolUse: [matched(EDIT_TOOL_MATCHER)],
-    PostToolUse: [matched(EDIT_TOOL_MATCHER), matched(SKILL_TOOL_MATCHER)],
-    Stop: [plain()],
-    SubagentStop: [plain()],
-    SubagentStart: [plain()],
-  };
+  // Phase 295: built from CLAUDE_CODE_EXPECTED_HOOKS, the single source of
+  // truth also pinned against core's independent copy by a drift test
+  // (packages/host-claude-code/tests/expected-hooks-drift.test.ts) — this
+  // installer and cadence doctor's completeness check must not disagree
+  // about what "fully installed" means. Phase 23.4's original two-entry
+  // PostToolUse shape (edit tools + the Skill tool) is expressed as two
+  // list entries sharing one event key.
+  const desired: Record<string, HookEntry[]> = {};
+  for (const { event, matcher } of CLAUDE_CODE_EXPECTED_HOOKS) {
+    (desired[event] ??= []).push(matcher === null ? plain() : matched(matcher));
+  }
 
   current.hooks = mergeManagedHookEntries(
     current.hooks ?? {},

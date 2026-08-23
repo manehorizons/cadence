@@ -55,7 +55,7 @@ import {
   type DoctorEnv,
   type DoctorReport,
 } from './model.js';
-import { hasManagedCadence, hasStaleScopeManagedHook } from './host-hooks.js';
+import { hasManagedCadence, hasStaleScopeManagedHook, findMissingManagedHooks } from './host-hooks.js';
 
 function checkNode(env: DoctorEnv): DoctorCheck {
   const r = checkNodeMajor(env.nodeVersion);
@@ -405,6 +405,23 @@ async function checkHostHooks(root: string): Promise<DoctorCheck> {
       'warning',
       `.claude/settings.json is not valid JSON: ${err instanceof Error ? err.message : String(err)}`,
       'Fix or regenerate it with `cadence-host-claude-code install`.',
+    );
+  }
+  // Phase 295: completeness before existence. A single non-stale marker
+  // used to be sufficient (hasManagedCadence below); this repo's own
+  // settings.json proved that's not enough — it was missing 2 of 7 managed
+  // entries while reporting `ok` throughout.
+  const missing = findMissingManagedHooks(parsed);
+  if (missing.length > 0) {
+    const named = missing
+      .map((m) => (m.matcher === null ? m.event : `${m.event} (matcher: ${m.matcher})`))
+      .join(', ');
+    return fail(
+      'host-hooks',
+      'error',
+      `${missing.length} managed hook ${missing.length === 1 ? 'entry is' : 'entries are'} missing from settings.json: ${named}.`,
+      'Run `cadence doctor --fix --wire-host` to reinstall the lifecycle hooks.',
+      'host-install',
     );
   }
   if (hasManagedCadence(parsed)) {

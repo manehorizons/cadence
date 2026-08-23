@@ -1051,7 +1051,7 @@ v1 check set:
 | `state` | `state.json` parses; `STATE.md` (derived view) present | error / warning |
 | `state-tracked` | *(git repos)* none of the four CADENCE-owned ephemeral paths (`state.json`, `STATE.md`, `mcp-trust.json`, `intelligence/context/`) are tracked by git — tracking any guarantees a cross-worktree merge conflict *(phase 196)* | warning |
 | `git-hooks` | *(git repos)* `core.hooksPath` resolves to `.githooks` (the pre-push gate) | warning |
-| `host-hooks` | *(if `.claude/settings.json`)* CADENCE-managed hook entries present | warning |
+| `host-hooks` | *(if `.claude/settings.json`)* every managed hook entry the installer writes is present — completeness, not just marker existence (phase 295); a stale-scope managed entry (present, outdated npm scope) is still `warning` | error / warning |
 | `host-commands` | *(if `.claude/commands/`)* every managed `cadence-*.md` run-line is portable (no machine-absolute path) | warning |
 | `codex-hooks` | *(if Codex readiness artifacts exist)* `.codex/hooks.json` contains CADENCE-managed hook entries | warning |
 | `codex-prompts` | *(if Codex readiness artifacts exist)* `$CODEX_HOME/prompts/cadence-*.md` contains CADENCE-managed prompt commands | warning |

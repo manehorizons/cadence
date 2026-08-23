@@ -2396,6 +2396,13 @@
       "kind": "note",
       "summary": "measured 2026-08-23: this repo's live .claude/settings.json PostToolUse array has only the edit-tool matcher entry, missing SKILL_TOOL_MATCHER; cadence doctor reports 'host-hooks: CADENCE-managed hook entries are present in settings.json' (ok) regardless; a synthetic hook payload (echo '{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Skill\",\"tool_input\":{\"skill\":\"phase-build\"}}' | cadence-host-claude-code hook) proves handleSkillInvoke itself works correctly and records the bare skill-name string when actually invoked -- the harness never delivers that payload because the matcher is missing",
       "createdAt": "2026-08-23T18:15:08.470Z"
+    },
+    {
+      "id": "ev-20260823-006",
+      "recommendationId": "rec-20260823-006",
+      "kind": "note",
+      "summary": "measured 2026-08-23: packages/core/src/doctor/run.ts's checkCodexHooks (.codex/hooks.json) and checkHostHooks (.claude/settings.json, pre-phase-295) both relied solely on hasManagedCadence (packages/core/src/doctor/host-hooks.ts) -- existence of any single non-stale marker, not completeness. Phase 295 fixed checkHostHooks; checkCodexHooks's identical gap is unchanged, confirmed by an empty git diff on that function and a new pinning test (295-01/AC-7) asserting its unaffected ok-on-single-marker behavior.",
+      "createdAt": "2026-08-23T20:24:29.144Z"
     }
   ]
 }

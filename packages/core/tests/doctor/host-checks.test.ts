@@ -3,6 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { runDoctor } from '../../src/doctor/run.js';
+import { writeCompleteManagedSettings } from './host-hooks-fixture.js';
 
 const ENV = { nodeVersion: 'v22.11.0', platform: 'linux' as const };
 
@@ -124,7 +125,7 @@ describe('runDoctor — setup + host checks', () => {
     expect(report.ok).toBe(true);
   });
 
-  it('host-hooks: settings.json without managed entries → warning', async () => {
+  it('host-hooks: settings.json without managed entries → error (phase 295: zero of 8 expected entries present)', async () => {
     active = await tempRepo({ initialized: true });
     await mkdir(join(active.root, '.claude'), { recursive: true });
     await writeFile(
@@ -133,11 +134,11 @@ describe('runDoctor — setup + host checks', () => {
     );
     const report = await runDoctor(active.root, ENV);
     expect(report.checks.find((c) => c.name === 'host-hooks')?.severity).toBe(
-      'warning',
+      'error',
     );
   });
 
-  it('host-hooks: settings.json with a _managedBy cadence entry → ok', async () => {
+  it('host-hooks: a single managed entry is an incomplete install → error naming what is missing (phase 295)', async () => {
     active = await tempRepo({ initialized: true });
     await mkdir(join(active.root, '.claude'), { recursive: true });
     await writeFile(
@@ -149,9 +150,53 @@ describe('runDoctor — setup + host checks', () => {
       }),
     );
     const report = await runDoctor(active.root, ENV);
-    expect(report.checks.find((c) => c.name === 'host-hooks')?.severity).toBe(
-      'ok',
-    );
+    const check = report.checks.find((c) => c.name === 'host-hooks');
+    expect(check?.severity).toBe('error');
+    expect(check?.detail).toMatch(/SessionStart/);
+  });
+
+  it('295-01/AC-3: a complete managed set → ok, byte-identical message to pre-phase-295', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeCompleteManagedSettings(active.root);
+    const report = await runDoctor(active.root, ENV);
+    const check = report.checks.find((c) => c.name === 'host-hooks');
+    expect(check?.severity).toBe('ok');
+    expect(check?.detail).toBe('CADENCE-managed hook entries are present in settings.json.');
+  });
+
+  it('295-01/AC-1, 295-01/AC-2, 295-01/AC-6: reproduces this repo\'s measured gap (missing Skill matcher + no SubagentStart) → error naming both, fixId host-install', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeCompleteManagedSettings(active.root, [
+      { event: 'PostToolUse', matcher: 'Skill', omit: true },
+      { event: 'SubagentStart', matcher: null, omit: true },
+    ]);
+    const report = await runDoctor(active.root, ENV);
+    const check = report.checks.find((c) => c.name === 'host-hooks');
+    expect(check?.severity).toBe('error');
+    expect(check?.detail).toMatch(/PostToolUse.*Skill/);
+    expect(check?.detail).toMatch(/SubagentStart/);
+    expect(check?.fixId).toBe('host-install');
+  });
+
+  it('host-hooks: a complete managed set plus a non-managed third-party entry → ok, third-party entry never named (phase 295, AC-4 read side)', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeCompleteManagedSettings(active.root, [], {
+      UserPromptSubmit: [
+        { hooks: [{ type: 'command', command: 'deja hook user-prompt-submit' }] },
+      ],
+    });
+    const report = await runDoctor(active.root, ENV);
+    const check = report.checks.find((c) => c.name === 'host-hooks');
+    expect(check?.severity).toBe('ok');
+    expect(check?.detail).not.toMatch(/deja/);
+  });
+
+  it('295-01/AC-7: codex-hooks: a single managed marker still reports ok — existence-only, unaffected by phase 295', async () => {
+    active = await tempRepo({ initialized: true });
+    process.env.CODEX_HOME = join(active.root, 'codex-home');
+    await writeCodexHooks(active.root);
+    const report = await runDoctor(active.root, ENV);
+    expect(report.checks.find((c) => c.name === 'codex-hooks')?.severity).toBe('ok');
   });
 
   it('codex readiness: all managed artifacts present → ok', async () => {
