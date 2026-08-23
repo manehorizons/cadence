@@ -4,6 +4,18 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.66.0] - 2026-08-23
+
+> Published to npm via the `Release` workflow (provenance), tag `v1.66.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
+
+### Added
+
+- **Packs arc, all four slices — Slices 1-4 shipped, closing `docs/packs-design.md`'s committed + stretch scope.** A pack is CADENCE's mechanism for distributing an installable bundle that declares what it enforces, composing with the gate machinery that already can't lie about itself:
+  - **Slice 1** — a pack manifest schema (`PackManifestZ`, `@thomas-powers-jr/cadence-types`), a local resolver (`resolvePacks`, project-local `.cadence/packs/<id>/pack.json`, zero network), and a `cadence doctor` check reporting resolution status. Zero behavioral effect on gate computation — `gatesFor`/`effectiveGateSet` output is byte-identical before/after for every existing fixture. (Phase `290`.)
+  - **Slice 2** — a pack's `skillAudit.required` becomes a real behavioral contributor, unioning into `effectiveRequired` with per-requirement provenance (`config`/`draft`/`pack:<id>`) recorded in `SUMMARY.json`. An enabled-but-unresolvable pack now refuses `cadence settle run` (bypassable only via `--allow-unresolvable-pack`, recorded in `SUMMARY.gateBypasses`), and the doctor `packs` check escalates from Slice 1's `warning` to `error` now that packs are behaviorally consumed. (Phase `291`.)
+  - **Slice 3** — a pack's `gates[].add` unions into `effectiveGateSet`'s output, tighten-only by construction (there is no `remove`/`override`/`set` key anywhere in the manifest schema, so there is no loosening shape to leave unenforced by mistake). `cadence config explain`'s current-tier row reflects enabled packs' contribution so the command that answers "what's actually enforced" stays honest. (Phase `292`.)
+  - **Slice 4** — `cadence doctor` gains a `pack-commands` check verifying a pack's declared `commands[]` (slash-command names) against the registered slash-command set (`COMMAND_GUIDANCE`, `@thomas-powers-jr/cadence-types`). Doctor-checked only, deliberately never enforced — no `Gate`/`DELTAS` entry, severity permanently capped at `warning`, `fixId` always `null` — matching design decision D-AP's explicit exclusion of `commands` from anything gate-shaped. A new test pins `COMMAND_GUIDANCE`'s keys as exactly equal to the installed slash-command catalog both host adapters actually render to disk, so the check's authority can't silently drift from reality. (Phase `293`.)
+
 ## [1.65.0] - 2026-08-22
 
 > Published to npm via the `Release` workflow (provenance), tag `v1.65.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
