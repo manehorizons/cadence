@@ -16,23 +16,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node packages/host-claude-code/bin/cadence-host-claude-code.cjs hook --cadence \"node packages/core/bin/cadence.cjs\""
-          }
-        ],
-        "_managedBy": "cadence"
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
             "command": "deja hook user-prompt-submit"
           }
         ]
-      }
-    ],
-    "PreToolUse": [
+      },
       {
-        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
         "hooks": [
           {
             "type": "command",
@@ -40,7 +28,9 @@
           }
         ],
         "_managedBy": "cadence"
-      },
+      }
+    ],
+    "PreToolUse": [
       {
         "matcher": "Write|Edit|MultiEdit",
         "hooks": [
@@ -49,9 +39,28 @@
             "command": "deja hook pre-tool-use"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node packages/host-claude-code/bin/cadence-host-claude-code.cjs hook --cadence \"node packages/core/bin/cadence.cjs\""
+          }
+        ],
+        "_managedBy": "cadence"
       }
     ],
     "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "deja hook post-tool-use"
+          }
+        ]
+      },
       {
         "matcher": "Edit|Write|MultiEdit|NotebookEdit",
         "hooks": [
@@ -63,13 +72,14 @@
         "_managedBy": "cadence"
       },
       {
-        "matcher": "Write|Edit|MultiEdit",
+        "matcher": "Skill",
         "hooks": [
           {
             "type": "command",
-            "command": "deja hook post-tool-use"
+            "command": "node packages/host-claude-code/bin/cadence-host-claude-code.cjs hook --cadence \"node packages/core/bin/cadence.cjs\""
           }
-        ]
+        ],
+        "_managedBy": "cadence"
       }
     ],
     "Stop": [
@@ -84,6 +94,17 @@
       }
     ],
     "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node packages/host-claude-code/bin/cadence-host-claude-code.cjs hook --cadence \"node packages/core/bin/cadence.cjs\""
+          }
+        ],
+        "_managedBy": "cadence"
+      }
+    ],
+    "SubagentStart": [
       {
         "hooks": [
           {
