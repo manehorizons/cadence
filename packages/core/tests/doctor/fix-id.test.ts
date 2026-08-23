@@ -55,7 +55,9 @@ describe('doctor fixId tagging (131 AC-1)', () => {
     await writeFile(join(active.root, '.claude', 'settings.json'), '{}');
     const report = await runDoctor(active.root, ENV);
     const c = report.checks.find((x) => x.name === 'host-hooks');
-    expect(c?.severity).toBe('warning');
+    // Phase 295: a settings.json with no hooks at all is missing every
+    // expected managed entry -- now error, not warning.
+    expect(c?.severity).toBe('error');
     expect(c?.fixId).toBe('host-install');
   });
 

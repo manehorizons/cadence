@@ -11,6 +11,7 @@ import {
   CONDUCTION_DRIFT_STREAK_WARN_THRESHOLD,
 } from '../../src/doctor/run.js';
 import { pass, fail, rollup, type DoctorCheck } from '../../src/doctor/model.js';
+import { writeCompleteManagedSettings } from './host-hooks-fixture.js';
 import { severityMark } from '../../src/cli/commands/doctor.js';
 import { settleService } from '../../src/services/settle.js';
 import type { CommandIO } from '../../src/services/io.js';
@@ -396,9 +397,14 @@ describe('runDoctor — host-hooks/codex-hooks stale-scope message honesty (phas
     );
   }
 
+  // Phase 295: a complete managed set (not a lone Stop entry) with one entry
+  // stale, so the new completeness check (which runs first) doesn't mask
+  // the staleness message this test actually exercises.
   it('250-01/AC-5: host-hooks: a stale-scope managed entry is flagged stale/needs-reinstall, not "not found", and remediation names --fix --wire-host', async () => {
     active = await tempRepo({ initialized: true, projectName: 'doc-host-hooks-stale' });
-    await writeHostSettings(active.root, STALE_HOST_COMMAND);
+    await writeCompleteManagedSettings(active.root, [
+      { event: 'Stop', matcher: null, command: STALE_HOST_COMMAND },
+    ]);
 
     const report = await runDoctor(active.root, HEALTHY_ENV);
     const check = findCheck(report.checks, 'host-hooks');
@@ -411,7 +417,10 @@ describe('runDoctor — host-hooks/codex-hooks stale-scope message honesty (phas
     expect(check?.remediation).toMatch(/cadence doctor --fix --wire-host/);
   });
 
-  it('250-01/AC-5: host-hooks: a genuinely absent managed entry still reports "not found", distinct from the stale-scope message', async () => {
+  // Phase 295: a fully-empty hooks object is the most extreme incomplete
+  // install (0 of 8 expected entries) — now `error`, naming every missing
+  // entry, rather than the old generic "not found" warning message.
+  it('250-01/AC-5: host-hooks: a genuinely absent managed entry reports error naming what is missing, distinct from the stale-scope message', async () => {
     active = await tempRepo({ initialized: true, projectName: 'doc-host-hooks-absent' });
     await mkdir(join(active.root, '.claude'), { recursive: true });
     await writeFile(join(active.root, '.claude', 'settings.json'), JSON.stringify({ hooks: {} }));
@@ -419,15 +428,18 @@ describe('runDoctor — host-hooks/codex-hooks stale-scope message honesty (phas
     const report = await runDoctor(active.root, HEALTHY_ENV);
     const check = findCheck(report.checks, 'host-hooks');
 
-    expect(check?.severity).toBe('warning');
+    expect(check?.severity).toBe('error');
     expect(check?.fixId).toBe('host-install');
-    expect(check?.detail).toMatch(/No CADENCE-managed/);
+    expect(check?.detail).toMatch(/SessionStart/);
     expect(check?.detail).not.toMatch(/outdated npm scope/i);
   });
 
-  it('250-01/AC-5: host-hooks: a fresh-scope managed entry passes and is never flagged stale', async () => {
+  it('250-01/AC-5: host-hooks: a complete, fresh-scope managed set passes and is never flagged stale', async () => {
     active = await tempRepo({ initialized: true, projectName: 'doc-host-hooks-fresh' });
-    await writeHostSettings(active.root, FRESH_HOST_COMMAND);
+    // FRESH_HOST_COMMAND matches writeCompleteManagedSettings's default command.
+    await writeCompleteManagedSettings(active.root, [
+      { event: 'Stop', matcher: null, command: FRESH_HOST_COMMAND },
+    ]);
 
     const report = await runDoctor(active.root, HEALTHY_ENV);
     expect(findCheck(report.checks, 'host-hooks')?.severity).toBe('ok');

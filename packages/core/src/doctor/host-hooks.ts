@@ -57,9 +57,19 @@ export function hasStaleScopeManagedHook(value: unknown): boolean {
 /**
  * Whether `value` carries a CADENCE-managed hook entry that is both present
  * AND current — i.e. {@link hasManagedCadenceMarker} is true and
- * {@link hasStaleScopeManagedHook} is false anywhere in the document. Shared
- * by `doctor`'s `checkHostHooks`/`checkCodexHooks` and the `config explain`
- * gather so the three never drift.
+ * {@link hasStaleScopeManagedHook} is false anywhere in the document.
+ *
+ * Existence-only, deliberately: still shared by `checkCodexHooks` and the
+ * `config explain` gather, both of which stay existence-based after phase
+ * 295. `checkHostHooks` (Claude Code) no longer relies on this alone —
+ * phase 295 found this repo's own `.claude/settings.json` missing 2 of 7
+ * managed entries while this predicate reported `true` throughout, so
+ * `checkHostHooks` now additionally runs {@link findMissingManagedHooks}
+ * first. That divergence (one check now verifies completeness, two still
+ * verify only existence) is intentional and recorded, not an oversight —
+ * `checkCodexHooks`'s identical gap is deferred (`.codex/hooks.json`'s
+ * shape and `host-codex`'s expected set differ genuinely) and filed as its
+ * own recommendation rather than fixed here.
  *
  * Phase 250 (AC-5): a managed marker alone is no longer sufficient — an
  * entry installed before the npm-scope rename still carries
@@ -77,6 +87,68 @@ export function hasStaleScopeManagedHook(value: unknown): boolean {
  */
 export function hasManagedCadence(value: unknown): boolean {
   return hasManagedCadenceMarker(value) && !hasStaleScopeManagedHook(value);
+}
+
+/** One managed hook entry the Claude Code installer writes: which lifecycle
+ *  event, and which tool-matcher (`null` for a plain, unmatched entry). */
+export interface ExpectedManagedHook {
+  event: string;
+  matcher: string | null;
+}
+
+/**
+ * Core's own independent copy of `@thomas-powers-jr/cadence-host-toolkit`'s
+ * `CLAUDE_CODE_EXPECTED_HOOKS` (phase 295). Core cannot import host-toolkit
+ * or any host-adapter package — this list is deliberately duplicated, not
+ * imported, and pinned against the host-toolkit original by a drift test in
+ * `packages/host-claude-code` (which depends on both). If a future hook
+ * event is added to the installer without updating this list (or vice
+ * versa), that test fails instead of the two silently disagreeing forever.
+ */
+export const CLAUDE_CODE_EXPECTED_HOOKS: readonly ExpectedManagedHook[] = [
+  { event: 'SessionStart', matcher: null },
+  { event: 'UserPromptSubmit', matcher: null },
+  { event: 'PreToolUse', matcher: 'Edit|Write|MultiEdit|NotebookEdit' },
+  { event: 'PostToolUse', matcher: 'Edit|Write|MultiEdit|NotebookEdit' },
+  { event: 'PostToolUse', matcher: 'Skill' },
+  { event: 'Stop', matcher: null },
+  { event: 'SubagentStop', matcher: null },
+  { event: 'SubagentStart', matcher: null },
+];
+
+/**
+ * Which of `expected`'s managed hook entries are missing from a parsed
+ * `.claude/settings.json` document — every one, not just the first
+ * (phase 295, AC-2). An expected entry counts as present when
+ * `hooks[event]` contains a `_managedBy: 'cadence'` entry whose `matcher`
+ * (or absence of one, for `matcher: null`) matches exactly. Ignores
+ * non-managed entries entirely (a third-party or user-authored hook on the
+ * same event never counts toward or against completeness). Best-effort: a
+ * malformed `hooks` shape is treated as "nothing present" rather than
+ * throwing.
+ */
+export function findMissingManagedHooks(
+  parsed: unknown,
+  expected: readonly ExpectedManagedHook[] = CLAUDE_CODE_EXPECTED_HOOKS,
+): ExpectedManagedHook[] {
+  const hooksByEvent =
+    parsed !== null && typeof parsed === 'object'
+      ? ((parsed as { hooks?: unknown }).hooks as Record<string, unknown> | undefined)
+      : undefined;
+
+  const missing: ExpectedManagedHook[] = [];
+  for (const exp of expected) {
+    const entries = hooksByEvent?.[exp.event];
+    const found =
+      Array.isArray(entries) &&
+      entries.some((e) => {
+        if (e === null || typeof e !== 'object') return false;
+        const entry = e as { _managedBy?: unknown; matcher?: unknown };
+        return entry._managedBy === 'cadence' && (entry.matcher ?? null) === exp.matcher;
+      });
+    if (!found) missing.push(exp);
+  }
+  return missing;
 }
 
 /**
