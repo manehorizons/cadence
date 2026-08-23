@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 2,
+  "draftId": "294-01",
+  "completedAt": "2026-08-23T18:33:18.824Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-5",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-6",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "ran"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Authored .cadence/packs/cadence/core-skills/pack.json (commands-only, no skillAudit.required/gates per D-AV) and packages/core/tests/packs/core-skills-manifest.test.ts covering AC-1/AC-3/AC-4/AC-5 against the real committed manifest. Independent review found 3 issues (AC-6 missing coverage, AC-3/AC-1 test weaknesses); all fixed.",
+      "execution": "inline",
+      "isolation": "worktree",
+      "modelClass": "standard"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Enabled cadence/core-skills in .cadence/config.json packs.enabled (separate commit per D-AX). Added AC-2 doctor-check assertions to the T1 test file (checkPacks/checkPackCommands against real repo root). Verified via real cadence doctor output: packs ok, pack-commands ok.",
+      "execution": "inline",
+      "isolation": "worktree",
+      "modelClass": "standard"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "Added Slice 5 entry to docs/packs-design.md §7 (objective+acceptance+finding, matching Slices 1-4 shape) and updated §3 status banner. Added AC-6 test asserting the doc content.",
+      "execution": "inline",
+      "isolation": "worktree",
+      "modelClass": "standard"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": [],
+    "provenance": []
+  },
+  "coverageScheme": "phase-qualified",
+  "coverageMode": "assertion",
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 6,
+    "sessionSubagentSpawns": 17
+  },
+  "assurance": {
+    "verifierRollup": [],
+    "evidenceTally": {
+      "ai-verified": 0,
+      "executed": 6,
+      "assertion": 0,
+      "mention": 0,
+      "unverified": 0
+    },
+    "overall": "mixed"
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "ce39aa7a2d5bdd449b0f706cc08b43ae22bd73e34100f741b4c888902db1b618"
+  }
+}

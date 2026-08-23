@@ -28,7 +28,7 @@
     "userPromptSubmit": true
   },
   "packs": {
-    "enabled": [],
+    "enabled": ["cadence/core-skills"],
     "disabled": []
   },
   "telemetry": {

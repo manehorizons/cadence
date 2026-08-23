@@ -1345,3 +1345,35 @@ assessGateReachability (doctor/run.ts:1632) scans only raw gatesFor(tier,profile
 - next: cadence milestone propose
 
 Phase 292's wave-1 dispatch ran 4 mutating subagents (T1/T3/T4/T5) concurrently in ONE shared git worktree, against the dispatch plan's own recommendedIsolation:'worktree' guidance for tasks that mutate files. One task's entire diff (T4, a new test file) was silently lost mid-run -- confirmed via git diff showing zero change -- despite the implementer subagent reporting success with real (apparently genuine, pre-loss) test output. A second task (T3) independently observed its own edits vanish and reappear mid-task, consistent with the same root cause. Damage was caught only because the orchestrator independently re-verified every task's diff on disk rather than trusting subagent reports (per this repo's standing verification-before-completion discipline) -- a session that skipped that step would have silently shipped a phase missing one task's work while believing it complete. Root cause is presumed to be concurrent uncoordinated writes/git-adjacent operations across multiple Task-tool agents sharing one working directory, though the exact mechanism (a git operation from one agent clobbering another's uncommitted edit, a tool-layer race, or something else) was not root-caused -- only worked around by re-running the lost task solo. Candidate fixes: (1) cadence dispatch plan could set recommendedIsolation:'worktree' as a harder signal an orchestrator must not ignore for concurrent waves, or (2) an orchestrator-side guard/lint that refuses to knowingly dispatch >1 concurrent mutating agent into a single shared worktree without per-task isolation. This phase's own remediation was process-level (redo T4 solo, verify-on-disk before trusting reports) -- no code change was made for this finding.
+
+## rec-20260823-003 — Packs Slice 4: commands declaration checked by cadence doctor, never enforced
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: packs, doctor
+- files: packages/types/src/pack.ts
+- evidence: docs/packs-design.md §7 Slice 4 + §6 D-AP; Slices 1-3 all shipped (phases 290/291/292) as of 2026-08-23.
+- next: cadence milestone propose
+
+docs/packs-design.md §7 Slice 4 (marked 'stretch -- may land after this arc closes'; Slices 1-3, the arc's committed scope, are now all shipped as of phase 292). A pack manifest's commands[] field (already parsed by PackManifestZ since Slice 1, currently unconsumed by any check) should be verified by cadence doctor -- confirming each declared command actually exists/registers in the CLI -- matching D-AP's explicit exclusion of commands from anything gate-shaped (doctor-checked only, never enforced, no refusal path). Acceptance per the design doc: a pack declaring a command that doesn't exist in the CLI's registered command set is flagged by doctor; a pack declaring a real command is a clean pass. Scope is intentionally narrow -- this is an observability check, not a new enforcement surface, consistent with commands never appearing in the Gate enum or DELTAS matrix.
+
+## rec-20260823-005 — doctor's host-hooks check passes on a partial/incomplete managed hook install
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: doctor, packs, skillAudit
+- files: packages/core/src/doctor/run.ts, .claude/settings.json
+- evidence: measured 2026-08-23: this repo's live .claude/settings.json PostToolUse array has only the edit-tool matcher entry, missing SKILL_TOOL_MATCHER; cadence doctor reports 'host-hooks: CADENCE-managed hook entries are present in settings.json' (ok) regardless; a synthetic hook payload (echo '{"hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"phase-build"}}' | cadence-host-claude-code hook) proves handleSkillInvoke itself works correctly and records the bare skill-name string when actually invoked -- the harness never delivers that payload because the matcher is missing
+- next: cadence milestone propose
+
+checkHostHooks (packages/core/src/doctor/run.ts) reports 'ok' as long as ANY _managedBy:'cadence' PostToolUse entry exists, not that all desired entries do. This repo's own .claude/settings.json is missing the Skill-tool matcher that packages/host-claude-code/src/install.ts:98 registers (matched(SKILL_TOOL_MATCHER), alongside matched(EDIT_TOOL_MATCHER)) -- so the skill-invoke hook path (packages/host-toolkit/src/routing.ts:34) never fires, state.skillAudit.invoked never populates, and doctor reports host-hooks: ok throughout. Any config/draft/pack skillAudit.required declaration in this state hard-refuses every settle (runSkillAuditCheck, severity error) with no diagnostic pointing at the real cause. The managed-marker merge logic itself (install-merge.ts) is correct and would add the missing entry on a re-run of cadence-host-claude-code install -- the bug is that nothing detects or prompts for that re-run; it is a silent, self-report-shaped gap in the exact tool (doctor) this project relies on to report whether its own mechanisms are wired.
