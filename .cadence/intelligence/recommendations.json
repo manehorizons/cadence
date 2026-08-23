@@ -2408,6 +2408,34 @@
       "decisionIds": [],
       "createdAt": "2026-08-23T04:41:09.641Z",
       "updatedAt": "2026-08-23T04:41:09.641Z"
+    },
+    {
+      "id": "rec-20260823-002",
+      "title": "dispatch could refuse/warn when multiple mutating tasks target one shared worktree concurrently",
+      "summary": "Phase 292's wave-1 dispatch ran 4 mutating subagents (T1/T3/T4/T5) concurrently in ONE shared git worktree, against the dispatch plan's own recommendedIsolation:'worktree' guidance for tasks that mutate files. One task's entire diff (T4, a new test file) was silently lost mid-run -- confirmed via git diff showing zero change -- despite the implementer subagent reporting success with real (apparently genuine, pre-loss) test output. A second task (T3) independently observed its own edits vanish and reappear mid-task, consistent with the same root cause. Damage was caught only because the orchestrator independently re-verified every task's diff on disk rather than trusting subagent reports (per this repo's standing verification-before-completion discipline) -- a session that skipped that step would have silently shipped a phase missing one task's work while believing it complete. Root cause is presumed to be concurrent uncoordinated writes/git-adjacent operations across multiple Task-tool agents sharing one working directory, though the exact mechanism (a git operation from one agent clobbering another's uncommitted edit, a tool-layer race, or something else) was not root-caused -- only worked around by re-running the lost task solo. Candidate fixes: (1) cadence dispatch plan could set recommendedIsolation:'worktree' as a harder signal an orchestrator must not ignore for concurrent waves, or (2) an orchestrator-side guard/lint that refuses to knowingly dispatch >1 concurrent mutating agent into a single shared worktree without per-task isolation. This phase's own remediation was process-level (redo T4 solo, verify-on-disk before trusting reports) -- no code change was made for this finding.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "dispatch",
+        "cadence-cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/dispatch-plan.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260823-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-23T04:57:34.370Z",
+      "updatedAt": "2026-08-23T04:57:34.370Z"
     }
   ],
   "archived": [
@@ -9048,12 +9076,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "292-packs-slice-3-tighten-only-gate-profile-deltas-via-effectivegateset",
-      "scoutId": "scout-20260822-packs-design",
-      "createdAt": "2026-08-22T21:25:18.852Z",
-      "updatedAt": "2026-08-23T04:56:38.380Z",
       "shippedRef": "292-packs-slice-3-tighten-only-gate-profile-deltas-via-effectivegateset",
+      "scoutId": "scout-20260822-packs-design",
       "archivedAt": "2026-08-23T04:56:38.380Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-22T21:25:18.852Z",
+      "updatedAt": "2026-08-23T04:56:38.380Z"
     }
   ]
 }

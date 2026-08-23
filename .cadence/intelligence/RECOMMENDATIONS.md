@@ -1344,3 +1344,19 @@ A pack's commands[] (declared slash-command names) checked for presence by caden
 - next: cadence milestone propose
 
 assessGateReachability (doctor/run.ts:1632) scans only raw gatesFor(tier,profile) across all tiers to decide a gate is 'blocked by profile' -- deliberately pack-unaware per docs/packs-design.md §4b, since it answers a matrix-wide question independent of any phase's active packs. But phase 292 (Packs Slice 3) confirmed the divergence is concretely reachable, not theoretical: security-audit is absent from all three standard cells and all three auto cells in DELTAS; code-review is absent from all three auto cells. Both are ordinary Gate members a pack can add via gates[].add. A pack declaring e.g. {profile:'standard', tier:'complex', add:['security-audit']} makes doctor report that gate as blocked-by-profile even though effectiveGateSet (engine.ts) now genuinely fires it once that pack is enabled -- a false negative in the doctor's own honesty tooling. Fixing this is out of Slice 3's scope per its DRAFT Boundaries (doctor/run.ts must not change); filed per the dec-20260820-003 file-only precedent for exactly this kind of out-of-scope-but-real gap.
+
+## rec-20260823-002 — dispatch could refuse/warn when multiple mutating tasks target one shared worktree concurrently
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: dispatch, cadence-cli
+- files: packages/core/src/services/dispatch-plan.ts
+- evidence: Phase 292 (292-01) build, 2026-08-23: T4's entire diff (a new regression test) vanished from disk during wave-1 concurrent dispatch of T1/T3/T4/T5 into one shared worktree; T3 independently reported the same symptom (edits vanishing/reappearing) mid-task. Caught by independent on-disk re-verification, not by the subagent's own report.
+- next: cadence milestone propose
+
+Phase 292's wave-1 dispatch ran 4 mutating subagents (T1/T3/T4/T5) concurrently in ONE shared git worktree, against the dispatch plan's own recommendedIsolation:'worktree' guidance for tasks that mutate files. One task's entire diff (T4, a new test file) was silently lost mid-run -- confirmed via git diff showing zero change -- despite the implementer subagent reporting success with real (apparently genuine, pre-loss) test output. A second task (T3) independently observed its own edits vanish and reappear mid-task, consistent with the same root cause. Damage was caught only because the orchestrator independently re-verified every task's diff on disk rather than trusting subagent reports (per this repo's standing verification-before-completion discipline) -- a session that skipped that step would have silently shipped a phase missing one task's work while believing it complete. Root cause is presumed to be concurrent uncoordinated writes/git-adjacent operations across multiple Task-tool agents sharing one working directory, though the exact mechanism (a git operation from one agent clobbering another's uncommitted edit, a tool-layer race, or something else) was not root-caused -- only worked around by re-running the lost task solo. Candidate fixes: (1) cadence dispatch plan could set recommendedIsolation:'worktree' as a harder signal an orchestrator must not ignore for concurrent waves, or (2) an orchestrator-side guard/lint that refuses to knowingly dispatch >1 concurrent mutating agent into a single shared worktree without per-task isolation. This phase's own remediation was process-level (redo T4 solo, verify-on-disk before trusting reports) -- no code change was made for this finding.

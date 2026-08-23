@@ -2368,6 +2368,13 @@
       "kind": "note",
       "summary": "Phase 292 (292-01) whole-branch review, 2026-08-23: verified against live DELTAS table that security-audit/code-review are pack-reachable additions absent from raw gatesFor at every tier for their respective profiles.",
       "createdAt": "2026-08-23T04:41:09.641Z"
+    },
+    {
+      "id": "ev-20260823-002",
+      "recommendationId": "rec-20260823-002",
+      "kind": "note",
+      "summary": "Phase 292 (292-01) build, 2026-08-23: T4's entire diff (a new regression test) vanished from disk during wave-1 concurrent dispatch of T1/T3/T4/T5 into one shared worktree; T3 independently reported the same symptom (edits vanishing/reappearing) mid-task. Caught by independent on-disk re-verification, not by the subagent's own report.",
+      "createdAt": "2026-08-23T04:57:34.370Z"
     }
   ]
 }
