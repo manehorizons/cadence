@@ -2438,35 +2438,6 @@
       "updatedAt": "2026-08-23T15:01:45.883Z"
     },
     {
-      "id": "rec-20260823-004",
-      "title": "Packs Slice 5: author and enable CADENCE's own pack (cadence/core-skills)",
-      "summary": "Slices 1-4 shipped the entire packs mechanism but no pack has ever existed -- .cadence/packs/ does not exist, config.packs.enabled is empty, and skillAudit.provenance reads [] in all four packs phases' own settle artifacts. Author and enable a real cadence/core-skills manifest to produce the first live pack resolution in a real settle.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "packs",
-        "dogfood"
-      ],
-      "affectedFiles": [
-        ".cadence/packs/cadence/core-skills/pack.json"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260823-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260823-first-pack",
-      "createdAt": "2026-08-23T18:15:08.293Z",
-      "updatedAt": "2026-08-23T18:15:08.293Z"
-    },
-    {
       "id": "rec-20260823-005",
       "title": "doctor's host-hooks check passes on a partial/incomplete managed hook install",
       "summary": "checkHostHooks (packages/core/src/doctor/run.ts) reports 'ok' as long as ANY _managedBy:'cadence' PostToolUse entry exists, not that all desired entries do. This repo's own .claude/settings.json is missing the Skill-tool matcher that packages/host-claude-code/src/install.ts:98 registers (matched(SKILL_TOOL_MATCHER), alongside matched(EDIT_TOOL_MATCHER)) -- so the skill-invoke hook path (packages/host-toolkit/src/routing.ts:34) never fires, state.skillAudit.invoked never populates, and doctor reports host-hooks: ok throughout. Any config/draft/pack skillAudit.required declaration in this state hard-refuses every settle (runSkillAuditCheck, severity error) with no diagnostic pointing at the real cause. The managed-marker merge logic itself (install-merge.ts) is correct and would add the missing entry on a re-run of cadence-host-claude-code install -- the bug is that nothing detects or prompts for that re-run; it is a silent, self-report-shaped gap in the exact tool (doctor) this project relies on to report whether its own mechanisms are wired.",
@@ -2493,9 +2464,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "scoutId": "scout-20260823-first-pack",
       "createdAt": "2026-08-23T18:15:08.470Z",
-      "updatedAt": "2026-08-23T18:15:08.470Z",
-      "scoutId": "scout-20260823-first-pack"
+      "updatedAt": "2026-08-23T18:15:08.470Z"
     }
   ],
   "archived": [
@@ -9173,6 +9144,38 @@
       "archiveReason": "shipped",
       "createdAt": "2026-08-22T21:25:19.027Z",
       "updatedAt": "2026-08-23T15:56:47.389Z"
+    },
+    {
+      "id": "rec-20260823-004",
+      "title": "Packs Slice 5: author and enable CADENCE's own pack (cadence/core-skills)",
+      "summary": "Slices 1-4 shipped the entire packs mechanism but no pack has ever existed -- .cadence/packs/ does not exist, config.packs.enabled is empty, and skillAudit.provenance reads [] in all four packs phases' own settle artifacts. Author and enable a real cadence/core-skills manifest to produce the first live pack resolution in a real settle.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "packs",
+        "dogfood"
+      ],
+      "affectedFiles": [
+        ".cadence/packs/cadence/core-skills/pack.json"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260823-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260823-first-pack",
+      "createdAt": "2026-08-23T18:15:08.293Z",
+      "updatedAt": "2026-08-23T18:34:04.884Z",
+      "shippedRef": "phase 294",
+      "archivedAt": "2026-08-23T18:34:04.884Z",
+      "archiveReason": "shipped"
     }
   ]
 }

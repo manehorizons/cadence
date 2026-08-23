@@ -1362,22 +1362,6 @@ Phase 292's wave-1 dispatch ran 4 mutating subagents (T1/T3/T4/T5) concurrently 
 
 docs/packs-design.md §7 Slice 4 (marked 'stretch -- may land after this arc closes'; Slices 1-3, the arc's committed scope, are now all shipped as of phase 292). A pack manifest's commands[] field (already parsed by PackManifestZ since Slice 1, currently unconsumed by any check) should be verified by cadence doctor -- confirming each declared command actually exists/registers in the CLI -- matching D-AP's explicit exclusion of commands from anything gate-shaped (doctor-checked only, never enforced, no refusal path). Acceptance per the design doc: a pack declaring a command that doesn't exist in the CLI's registered command set is flagged by doctor; a pack declaring a real command is a clean pass. Scope is intentionally narrow -- this is an observability check, not a new enforcement surface, consistent with commands never appearing in the Gate enum or DELTAS matrix.
 
-## rec-20260823-004 — Packs Slice 5: author and enable CADENCE's own pack (cadence/core-skills)
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: packs, dogfood
-- files: .cadence/packs/cadence/core-skills/pack.json
-- evidence: packs slices 1-4 shipped (phases 290-293); measured 2026-08-23: .cadence/packs/ does not exist, config.packs.enabled/[disabled] both empty, and skillAudit reads {required:[],invoked:[],provenance:[]} in all four packs phases' SUMMARY.json
-- next: cadence milestone propose
-
-Slices 1-4 shipped the entire packs mechanism but no pack has ever existed -- .cadence/packs/ does not exist, config.packs.enabled is empty, and skillAudit.provenance reads [] in all four packs phases' own settle artifacts. Author and enable a real cadence/core-skills manifest to produce the first live pack resolution in a real settle.
-
 ## rec-20260823-005 — doctor's host-hooks check passes on a partial/incomplete managed hook install
 
 - status: candidate
