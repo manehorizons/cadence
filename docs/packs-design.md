@@ -1,7 +1,8 @@
 # CADENCE Packs — Design (v1, internal-first)
 
 > **Status: Slice 1 shipped (phase 290); Slice 2 shipped (phase 291); Slice 3
-> shipped (phase 292); Slice 4 shipped (phase 293).** As of Slice 1,
+> shipped (phase 292); Slice 4 shipped (phase 293); Slice 5 shipped (phase
+> 294).** As of Slice 1,
 > `config.packs` is parsed and resolved —
 > `resolvePacks()` (`packages/core/src/packs/resolve.ts`)
 > validates each enabled id's `.cadence/packs/<id>/pack.json` against
@@ -25,7 +26,15 @@
 > `gates[]` shape is non-additive-rejected at parse time. As of Slice 4, a
 > pack's declared `commands[]` entries are doctor-checked against the
 > registered slash-command set (`Object.keys(COMMAND_GUIDANCE)`) — still
-> `cadence doctor`-only, `warning`, never enforced (D-AP). This document
+> `cadence doctor`-only, `warning`, never enforced (D-AP). As of Slice 5,
+> the mechanism has a real consumer: `.cadence/packs/cadence/core-skills/`
+> is the first manifest that actually exists on disk, and
+> `config.packs.enabled` is no longer empty. Slice 5 also found the packs
+> arc's telemetry precondition broken in this repo — the host's Skill-tool
+> `PostToolUse` hook matcher was unregistered, so a `skillAudit.required`
+> declaration would have hard-refused every settle — and recorded that a
+> commands-only pack, as a result, contributes nothing to
+> `SUMMARY.json`'s `skillAudit.provenance` (see §7 Slice 5). This document
 > remains the design record for the whole arc; §7 tracks which slice is
 > done. It is intentionally **not** indexed in `docs/README.md`.
 
@@ -370,6 +379,32 @@ unrecognized command, with `fixId: null`; the check never escalates past
 invariant (`COMMAND_GUIDANCE` keys vs. `COMMANDS.map(c => c.name)` in
 `packages/host-toolkit/src/routing.ts`) is pinned by a dedicated test so
 the two catalogs cannot silently drift apart.
+
+**Slice 5 — the first real pack, `cadence/core-skills`. Shipped (phase 294).**
+Slices 1-4 built the entire mechanism but no pack ever existed:
+`.cadence/packs/` didn't exist, `config.packs.enabled` was empty, and
+`skillAudit.provenance` read `[]` in all four packs phases' own settle
+artifacts. This slice authors and enables CADENCE's own manifest,
+`.cadence/packs/cadence/core-skills/pack.json`, declaring only `commands[]`
+(the four slash commands — `cadence-draft`, `cadence-approve`,
+`cadence-build`, `cadence-settle` — every phase's loop actually invokes; no
+`skillAudit.required`, no `gates[]`).
+*Acceptance:* `resolvePacks` resolves the real manifest with `source:
+'local'`; `cadence doctor`'s `packs` and `pack-commands` checks both report
+clean against it; the real manifest's `.strict()` shape rejects an
+unrecognized key exactly like the fixture suite predicts; disabled wins
+over enabled for the real id, not just a fixture.
+*Finding, not a gap left open:* this repo's `.claude/settings.json` was
+missing the `Skill`-tool `PostToolUse` matcher `install.ts` registers
+(`packages/host-toolkit/src/routing.ts`'s `skill-invoke` route never
+fires), so `state.skillAudit.invoked` never populates and
+`runSkillAuditCheck` would hard-refuse any settle declaring
+`skillAudit.required` — including this slice's own. The manifest omits
+that field as a result, which means `skillAudit.provenance` stays `[]` in
+this slice's settle too: a commands-only pack currently leaves **zero
+trace** in a settled `SUMMARY.json`. Both the broken telemetry matcher and
+this observability gap are filed as separate recommendations
+(`rec-20260823-005`), not fixed here — see this phase's Boundaries.
 
 **Explicit non-goals for the whole arc**, not just this document: registry
 or remote source resolution, pack-on-pack dependencies, a public product

@@ -1,0 +1,35 @@
+{
+  "draftId": "294-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Authored .cadence/packs/cadence/core-skills/pack.json (commands-only, no skillAudit.required/gates per D-AV) and packages/core/tests/packs/core-skills-manifest.test.ts covering AC-1/AC-3/AC-4/AC-5 against the real committed manifest. Independent review found 3 issues (AC-6 missing coverage, AC-3/AC-1 test weaknesses); all fixed.",
+      "touchedFiles": [
+        "docs/packs-design.md",
+        "packages/core/tests/packs/core-skills-manifest.test.ts"
+      ],
+      "updatedAt": "2026-08-23T18:32:43.667Z",
+      "execution": "inline",
+      "isolation": "worktree",
+      "modelClass": "standard"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Enabled cadence/core-skills in .cadence/config.json packs.enabled (separate commit per D-AX). Added AC-2 doctor-check assertions to the T1 test file (checkPacks/checkPackCommands against real repo root). Verified via real cadence doctor output: packs ok, pack-commands ok.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-23T18:32:43.853Z",
+      "execution": "inline",
+      "isolation": "worktree",
+      "modelClass": "standard"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Added Slice 5 entry to docs/packs-design.md §7 (objective+acceptance+finding, matching Slices 1-4 shape) and updated §3 status banner. Added AC-6 test asserting the doc content.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-23T18:32:44.034Z",
+      "execution": "inline",
+      "isolation": "worktree",
+      "modelClass": "standard"
+    }
+  }
+}

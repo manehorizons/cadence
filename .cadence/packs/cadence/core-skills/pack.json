@@ -1,0 +1,5 @@
+{
+  "id": "cadence/core-skills",
+  "version": "1.0.0",
+  "commands": ["cadence-draft", "cadence-approve", "cadence-build", "cadence-settle"]
+}
