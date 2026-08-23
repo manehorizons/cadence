@@ -155,7 +155,7 @@ describe('runDoctor — setup + host checks', () => {
     expect(check?.detail).toMatch(/SessionStart/);
   });
 
-  it('host-hooks: a complete managed set → ok, byte-identical message to pre-phase-295 (phase 295, AC-3)', async () => {
+  it('295-01/AC-3: a complete managed set → ok, byte-identical message to pre-phase-295', async () => {
     active = await tempRepo({ initialized: true });
     await writeCompleteManagedSettings(active.root);
     const report = await runDoctor(active.root, ENV);
@@ -164,7 +164,7 @@ describe('runDoctor — setup + host checks', () => {
     expect(check?.detail).toBe('CADENCE-managed hook entries are present in settings.json.');
   });
 
-  it('host-hooks: reproduces this repo\'s measured gap (missing Skill matcher + no SubagentStart) → error naming both (phase 295, AC-1/AC-2)', async () => {
+  it('295-01/AC-1, 295-01/AC-2, 295-01/AC-6: reproduces this repo\'s measured gap (missing Skill matcher + no SubagentStart) → error naming both, fixId host-install', async () => {
     active = await tempRepo({ initialized: true });
     await writeCompleteManagedSettings(active.root, [
       { event: 'PostToolUse', matcher: 'Skill', omit: true },
@@ -191,7 +191,7 @@ describe('runDoctor — setup + host checks', () => {
     expect(check?.detail).not.toMatch(/deja/);
   });
 
-  it('codex-hooks: a single managed marker still reports ok — existence-only, unaffected by phase 295 (AC-7)', async () => {
+  it('295-01/AC-7: codex-hooks: a single managed marker still reports ok — existence-only, unaffected by phase 295', async () => {
     active = await tempRepo({ initialized: true });
     process.env.CODEX_HOME = join(active.root, 'codex-home');
     await writeCodexHooks(active.root);

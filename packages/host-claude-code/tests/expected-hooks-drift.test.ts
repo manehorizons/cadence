@@ -18,12 +18,12 @@ function sortedKey(list: readonly { event: string; matcher: string | null }[]): 
   return list.map((e) => `${e.event}::${e.matcher ?? ''}`).sort();
 }
 
-describe('295-01/AC-5: host-toolkit and core agree on the expected Claude Code hook set', () => {
-  it('the two independently-held lists describe the same (event, matcher) pairs', () => {
+describe('host-toolkit and core agree on the expected Claude Code hook set', () => {
+  it('295-01/AC-5: the two independently-held lists describe the same (event, matcher) pairs', () => {
     expect(sortedKey(CORE_EXPECTED_HOOKS)).toEqual(sortedKey(TOOLKIT_EXPECTED_HOOKS));
   });
 
-  it('the set matches what this repo actually needs (sanity, not just self-consistency)', () => {
+  it('295-01/AC-5: the set matches what this repo actually needs (sanity, not just self-consistency)', () => {
     expect(sortedKey(TOOLKIT_EXPECTED_HOOKS)).toEqual(
       [
         'PostToolUse::Edit|Write|MultiEdit|NotebookEdit',
