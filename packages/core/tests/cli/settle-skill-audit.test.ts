@@ -85,6 +85,22 @@ async function arrange(
   await run(['build', 'task', 'T1', '--status=DONE'], root);
 }
 
+/** Write a valid `.cadence/packs/<id>/pack.json` declaring `skillAudit.required`
+ *  (phase 291, Slice 2 T2 — a resolved pack's declared skills join the
+ *  enforced union exactly like config/DRAFT-declared ones). */
+async function seedSkillAuditPack(
+  root: string,
+  id: string,
+  requiredSkills: string[],
+): Promise<void> {
+  const packDir = join(root, '.cadence', 'packs', id);
+  await mkdir(packDir, { recursive: true });
+  await writeFile(
+    join(packDir, 'pack.json'),
+    JSON.stringify({ id, version: '1.0.0', skillAudit: { required: requiredSkills } }),
+  );
+}
+
 const SETTLE = ['settle', 'run', '--auto', '--no-interactive', '--allow-missing-coverage', '--allow-stale-draft'];
 const summaryPath = (root: string) =>
   join(root, '.cadence/phases/01-foundation/01-01-SUMMARY.json');
@@ -196,5 +212,140 @@ describe('cadence settle run — required-skill gate (Phase 34.1)', () => {
     // gate — proves the deliberate unconditional-emission divergence.
     const log = await readFile(logPath(active.root), 'utf8');
     expect(log).toMatch(/"type":"skill-audit-miss"/);
+  });
+
+  // Phase 291 (Slice 2, T2): end-to-end proof that `resolvePacks` is wired
+  // into the real settle CLI — a resolved pack's `skillAudit.required` joins
+  // the enforced union and its provenance round-trips into SUMMARY.json,
+  // exactly like the config/DRAFT paths already covered above.
+  it('291-01/AC-1: an enabled, resolvable pack\'s skillAudit.required is enforced — unsatisfied pack skill refuses settle exactly like a config-declared miss', async () => {
+    active = await tempRepo({ initialized: true });
+    await arrange(active.root);
+    await seedSkillAuditPack(active.root, 'cadence/test-pack', ['some-skill']);
+    await patchConfig(
+      active.root,
+      (c) => (c.packs = { enabled: ['cadence/test-pack'], disabled: [] }),
+    );
+    // some-skill is never invoked.
+    const r = await run(SETTLE, active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/required skill\(s\) not invoked: some-skill/);
+    expect(existsSync(summaryPath(active.root))).toBe(true);
+    const log = await readFile(logPath(active.root), 'utf8');
+    expect(log).toMatch(/"type":"skill-audit-miss"/);
+    expect(log).toMatch(/"severity":"error"/);
+    expect(log).toMatch(/"missing":\["some-skill"\]/);
+  });
+
+  it('291-01/AC-2: pack-declared skill invoked → settle succeeds and SUMMARY.skillAudit.provenance attributes it to the resolved pack', async () => {
+    active = await tempRepo({ initialized: true });
+    await arrange(active.root);
+    await seedSkillAuditPack(active.root, 'cadence/test-pack', ['some-skill']);
+    await patchConfig(
+      active.root,
+      (c) => (c.packs = { enabled: ['cadence/test-pack'], disabled: [] }),
+    );
+    await seedInvoked(active.root, ['some-skill']);
+    const r = await run(SETTLE, active.root);
+    expect(r.code).toBe(0);
+    expect(existsSync(summaryPath(active.root))).toBe(true);
+    const summary = JSON.parse(await readFile(summaryPath(active.root), 'utf8'));
+    expect(summary.skillAudit.required).toEqual(['some-skill']);
+    expect(summary.skillAudit.provenance).toEqual([
+      { skill: 'some-skill', source: 'pack:cadence/test-pack' },
+    ]);
+  });
+
+  // Note on the explicit null-config path (settle.ts's `ctx.config ? await
+  // resolvePacks(...) : []`): it is not exercised here. In the real CLI,
+  // `loadConfig()` never returns null — it either succeeds or throws
+  // `ConfigInvalidError`, and settle's own config-load error handling exits
+  // before `runAnomalyAndSkillAuditChecks` is ever reached, so there is no
+  // reachable CLI path where `ctx.config` is null at this point. The
+  // null-config behavior (resolvedPacks treated as `[]`, matching
+  // `runSkillAuditCheck`'s own documented null-config contract) is already
+  // covered at the unit level in
+  // `packages/core/tests/checks/skill-audit.test.ts`
+  // ("behaves identically to the pre-Slice-2 code path when no packs
+  // resolve", T1) by constructing a `SettleContext` with `config: null`
+  // directly — forcing an artificial CLI fixture to reach the same
+  // unreachable state would not reflect real behavior.
+});
+
+// Phase 291 (Slice 2, T3): the enabled-but-unresolvable-pack refusal, end to
+// end through the real settle CLI. Lives beside the skill-audit block because
+// both checks are dispatched explicitly by settle from the same
+// `resolvedPacks` set — pack-resolution first, so skill-audit never reasons on
+// a pack set that failed to load.
+describe('cadence settle run — enabled-but-unresolvable pack (Phase 291, Slice 2)', () => {
+  it('291-01/AC-4: an enabled pack with no manifest on disk refuses settle, naming the pack id and its reason', async () => {
+    active = await tempRepo({ initialized: true });
+    await arrange(active.root);
+    // No `.cadence/packs/cadence/missing-pack/pack.json` is ever written.
+    await patchConfig(
+      active.root,
+      (c) => (c.packs = { enabled: ['cadence/missing-pack'], disabled: [] }),
+    );
+    const r = await run(SETTLE, active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/could not be resolved/);
+    expect(r.stderr).toContain('cadence/missing-pack');
+    expect(r.stderr).toContain('--allow-unresolvable-pack');
+  });
+
+  it('291-01/AC-4: --allow-unresolvable-pack lets settle proceed and records the bypass in SUMMARY.gateBypasses', async () => {
+    active = await tempRepo({ initialized: true });
+    await arrange(active.root);
+    await patchConfig(
+      active.root,
+      (c) => (c.packs = { enabled: ['cadence/missing-pack'], disabled: [] }),
+    );
+    const r = await run([...SETTLE, '--allow-unresolvable-pack'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toMatch(/pack-resolution: --allow-unresolvable-pack set/);
+    expect(existsSync(summaryPath(active.root))).toBe(true);
+    const summary = JSON.parse(await readFile(summaryPath(active.root), 'utf8'));
+    const bypass = (summary.gateBypasses ?? []).find(
+      (b: { gate: string }) => b.gate === 'pack-resolution',
+    );
+    expect(bypass).toBeDefined();
+    expect(bypass.flag).toBe('--allow-unresolvable-pack');
+    expect(bypass.reason).toContain('cadence/missing-pack');
+    expect(bypass.severity).toBe('warn');
+  });
+
+  // The load-bearing ordering proof. Both refusals are live on this run (an
+  // unresolvable pack AND an un-invoked config-declared required skill), so the
+  // message that appears names which check ran first. If the pack-resolution
+  // dispatch were ever moved after `runSkillAuditCheck`, skill-audit would
+  // "pass"/refuse on a pack set that never loaded — reasoning on incomplete
+  // data — and the `not.toMatch` below would fail. No other test in this file
+  // discriminates the two orders.
+  it('291-01/AC-4: pack-resolution refuses BEFORE skill-audit — a run with both failures reports the unresolvable pack, never the skill miss', async () => {
+    active = await tempRepo({ initialized: true });
+    await arrange(active.root);
+    await patchConfig(active.root, (c) => (c.skillAudit = { required: ['tdd'] }));
+    await patchConfig(
+      active.root,
+      (c) => (c.packs = { enabled: ['cadence/missing-pack'], disabled: [] }),
+    );
+    await seedInvoked(active.root, []);
+    const r = await run(SETTLE, active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/could not be resolved/);
+    expect(r.stderr).not.toMatch(/required skill\(s\) not invoked/);
+  });
+
+  it('291-01/AC-4: an id in both packs.enabled and packs.disabled never refuses — disabled wins, so nothing is unresolvable', async () => {
+    active = await tempRepo({ initialized: true });
+    await arrange(active.root);
+    await patchConfig(
+      active.root,
+      (c) =>
+        (c.packs = { enabled: ['cadence/missing-pack'], disabled: ['cadence/missing-pack'] }),
+    );
+    const r = await run(SETTLE, active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).not.toMatch(/could not be resolved/);
   });
 });

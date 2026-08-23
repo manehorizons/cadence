@@ -47,6 +47,13 @@ import {
 } from '../gates/assurance-record.js';
 import { effectiveEvidenceFloor, evidenceFloorRefusalReason } from '../gates/engine.js';
 import { runSkillAuditCheck } from '../checks/skill-audit.js';
+import { checkUnresolvablePacks } from '../checks/pack-resolution.js';
+// Phase 291 (Slice 2, T2): the ONE deliberate services/ -> packs/ import this
+// task introduces. `settle.ts` is the single asserted consumer — see
+// `packages/core/tests/gates/engine.test.ts`'s re-scoped structural test
+// (291-01/AC-3). Do not add a second `packs/` import anywhere else in
+// `services/`.
+import { resolvePacks } from '../packs/resolve.js';
 import {
   addRecommendation,
   runAdvanceConvertedToSettlePendingForPhase,
@@ -95,6 +102,9 @@ export interface SettleArgs {
   /** Phase 156: do not refuse on a boundary-scan violation; record the
    *  offenders into SUMMARY and settle anyway. */
   allowBoundaryScanFailure?: boolean;
+  /** Phase 291 (Slice 2): do not refuse when an enabled pack fails to resolve;
+   *  record the bypass into SUMMARY.gateBypasses and settle anyway. */
+  allowUnresolvablePack?: boolean;
   /** Phase 83: bypass the worktree phase-collision backstop. */
   allowPhaseCollision?: boolean;
   interactive?: boolean;
@@ -624,6 +634,7 @@ function buildSettleContext(
       ...(opts.allowSecurityAuditFailure !== undefined ? { allowSecurityAuditFailure: opts.allowSecurityAuditFailure } : {}),
       ...(opts.allowSkillAuditMiss !== undefined ? { allowSkillAuditMiss: opts.allowSkillAuditMiss } : {}),
       ...(opts.allowBoundaryScanFailure !== undefined ? { allowBoundaryScanFailure: opts.allowBoundaryScanFailure } : {}),
+      ...(opts.allowUnresolvablePack !== undefined ? { allowUnresolvablePack: opts.allowUnresolvablePack } : {}),
     },
     interactivity,
     explicitIds,
@@ -1071,6 +1082,13 @@ async function runAnomalyAndSkillAuditChecks(
   verifierFailure: SettleAccumulator['flags']['verifierFailure'],
   io: CommandIO,
 ): Promise<AnomalyAndSkillAuditResult> {
+  // Phase 291 (Slice 2, T2): resolve packs once here so the skill-audit union
+  // (below) can fold in each successfully resolved pack's
+  // `manifest.skillAudit.required`. Null config reproduces pre-Slice-2
+  // behavior exactly (no packs resolved), matching `runSkillAuditCheck`'s own
+  // documented null-config contract.
+  const resolvedPacks = ctx.config ? await resolvePacks(cwd, ctx.config) : [];
+
   const anomalies = collectAnomalies({
     draft,
     progress,
@@ -1100,11 +1118,43 @@ async function runAnomalyAndSkillAuditChecks(
   }
 
   {
-    const res = await runSkillAuditCheck(ctx);
+    // Phase 291 (Slice 2, T3): the enabled-but-unresolvable-pack refusal runs
+    // BEFORE the skill-audit check, deliberately. If a broken pack were left
+    // in `resolvedPacks` while skill-audit ran first, a skill-audit "pass"
+    // could be computed from a pack that contributed nothing (its manifest
+    // never loaded) — the check would silently reason on incomplete data.
+    // Checking resolution first means settle refuses on the right grounds.
+    // Placed here (rather than beside the `resolvedPacks` computation above)
+    // so the refusal path still collects anomalies and notifies exactly like
+    // every other refusal in this function, and so the bypass record below
+    // sits at the same site as the check itself.
+    const packRes = checkUnresolvablePacks(resolvedPacks, ctx.opts, io);
+    if (packRes.outcome === 'refuse') {
+      return { ok: false, result: { exitCode: 1 } };
+    }
+    if (packRes.bypassed === true) {
+      // Recorded the way `evidenceFloorBypassesUsed` is — a direct
+      // `GateBypass` push, NOT via `anomalyToGateBypass`. There is no
+      // `pack-resolution` anomaly type (and `collectAnomalies` is pure, with
+      // no pack input), so the anomaly-derived path could not carry this.
+      // `gate` is a loose `z.string()` on `GateBypassZ` precisely so
+      // non-`Gate`-enum names like this one can be recorded. The stderr line
+      // is not re-emitted here: `checkUnresolvablePacks` already printed its
+      // own, and this push happens after the generic bypass-echo loop above.
+      gateBypasses.push({
+        gate: 'pack-resolution',
+        flag: '--allow-unresolvable-pack',
+        reason: packRes.reason ?? 'enabled pack(s) failed to resolve',
+        severity: 'warn',
+      });
+    }
+
+    const res = await runSkillAuditCheck(ctx, resolvedPacks);
     if (res.outcome === 'refuse') {
       return { ok: false, result: { exitCode: 1 } };
     }
     state.skillAudit.required = res.effectiveRequired;
+    state.skillAudit.provenance = res.requiredWithProvenance;
   }
 
   return { ok: true, anomalies, gateBypasses };

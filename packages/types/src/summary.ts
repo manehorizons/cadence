@@ -306,7 +306,35 @@ export const SummaryZ = z.object({
   ),
   decisions: z.array(DecisionZ),
   deferred: z.array(DeferredItemZ),
-  skillAudit: z.object({ required: z.array(z.string()), invoked: z.array(z.string()) }),
+  skillAudit: z.object({
+    required: z.array(z.string()),
+    invoked: z.array(z.string()),
+    /**
+     * Phase 291 (291-01, T1): per-requirement provenance for `required` above —
+     * one entry per (skill, source) pair, where `source` is `'config'`,
+     * `'draft'`, or `` `pack:<id>` `` (Slice 2 makes a resolved pack's
+     * `skillAudit.required` a real contributor to the enforced set, so a
+     * SUMMARY that only listed the union would no longer say who demanded
+     * what). `required` stays the deduped, enforcement-facing union; this
+     * array is deliberately NOT deduped across sources, so a skill demanded
+     * by both config and a pack yields two entries rather than one collapsed
+     * row. Absent on every pre-phase-291 record. Mirrors
+     * `CadenceStateZ.skillAudit.provenance`.
+     *
+     * MUST stay `.optional()` with NO `.default(...)`, for the exact same
+     * reason as `coverageScheme`/`providerSelection` (phase 239/263
+     * precedent): `cadence summary verify` Zod-parses the file and then
+     * content-hashes the PARSED object (`core/src/services/summary-hash.ts`),
+     * so a default here would be injected into every historical SUMMARY at
+     * parse time, change its digest, and falsely report every past settle as
+     * tampered. A test in
+     * `core/tests/summary-skill-audit-provenance-schema.test.ts` fails if a
+     * default is added. No `schemaVersion` bump either — additive optional
+     * fields have never required one since phase 232's bump to
+     * schemaVersion 2. Kept inline (not a named/exported schema) on purpose.
+     */
+    provenance: z.array(z.object({ skill: z.string(), source: z.string() })).optional(),
+  }),
   /**
    * Phase 239 (T6, AC-7): the coverage scheme and mode in force at settle, so
    * a SUMMARY's `acResults[].evidence` can be read back knowing what rule

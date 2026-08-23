@@ -92,6 +92,27 @@ export const CadenceStateZ = z.object({
   skillAudit: z.object({
     required: z.array(z.string()),
     invoked: z.array(z.string()),
+    /**
+     * Phase 291 (291-01, T1): per-requirement provenance for `required` above —
+     * one entry per (skill, source) pair, where `source` is `'config'`,
+     * `'draft'`, or `` `pack:<id>` ``. `required` stays the deduped,
+     * enforcement-facing union; this array is deliberately NOT deduped across
+     * sources, so a skill demanded by both config and a pack yields two
+     * entries rather than one collapsed row that hides who demanded it.
+     * Absent on every pre-phase-291 record.
+     *
+     * MUST stay `.optional()` with NO `.default(...)`, mirroring
+     * `SummaryZ.coverageScheme`/`GateProvenanceZ.providerSelection` (phase
+     * 239/263 precedent): this same shape is mirrored onto `SummaryZ.skillAudit`,
+     * and `cadence summary verify` Zod-parses a SUMMARY and then content-hashes
+     * the PARSED object (`core/src/services/summary-hash.ts`), so a default
+     * here would be injected into every historical SUMMARY at parse time,
+     * change its digest, and falsely report every past settle as tampered.
+     * `core/tests/summary-skill-audit-provenance-schema.test.ts` fails if a
+     * default is added. Kept inline (not a named/exported schema) on purpose —
+     * the shape has exactly one consumer pair and needs no public name.
+     */
+    provenance: z.array(z.object({ skill: z.string(), source: z.string() })).optional(),
   }),
   activeTask: z
     .object({

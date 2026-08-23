@@ -93,6 +93,10 @@ export function registerSettleCommand(program: Command): void {
       'do not refuse on a boundary-scan violation (files touched outside the declared boundary); record them in SUMMARY and settle anyway (Phase 156)',
     )
     .option(
+      '--allow-unresolvable-pack',
+      'do not refuse when an id in config.packs.enabled fails to resolve (missing/invalid pack manifest); record the bypass in SUMMARY.gateBypasses and settle anyway (Phase 291)',
+    )
+    .option(
       '--allow-phase-collision',
       'bypass the worktree phase-collision backstop (Phase 83): settle even if a sibling worktree or upstream claims this phase number',
     )

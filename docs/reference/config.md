@@ -108,8 +108,8 @@ Extension pack management.
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `packs.enabled` | `string[]` | `[]` | Pack IDs to activate. |
-| `packs.disabled` | `string[]` | `[]` | Pack IDs to suppress even if auto-discovered. |
+| `packs.enabled` | `string[]` | `[]` | Pack IDs to activate. Each id resolves against `.cadence/packs/<id>/pack.json`; a resolved pack's `skillAudit.required` unions into the [`skillAudit`](#skillaudit) check (Phase 291), and an enabled-but-unresolvable pack refuses `cadence settle run` (bypass: `--allow-unresolvable-pack`) and fails `cadence doctor`'s `packs` check. Gate-profile deltas (`gates[].add`) and slash-command declarations are not yet consumed — see `docs/packs-design.md`. |
+| `packs.disabled` | `string[]` | `[]` | Pack IDs to suppress even if auto-discovered; wins over `packs.enabled` on collision. |
 
 ---
 
@@ -216,11 +216,11 @@ Example — a Ruby-style `do-end-keyword` profile for RSpec's `it '...' do ... e
 
 ## skillAudit
 
-Drives the skill-audit check, which enforces that declared required skills were actually invoked during a phase. Declaring required skills (here or via a DRAFT's `requiredSkills`) is the opt-in — the check is inert when the effective required set is empty.
+Drives the skill-audit check, which enforces that declared required skills were actually invoked during a phase. Declaring required skills (here, via a DRAFT's `requiredSkills`, or via an enabled pack's `skillAudit.required` — see [`packs`](#packs)) is the opt-in — the check is inert when the effective required set is empty.
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `skillAudit.required` | `string[]` | `[]` | Skill IDs that must be invoked before a phase settles. At `cadence settle run`, this set is unioned with the DRAFT's `requiredSkills`; if any are missing from telemetry, settle refuses unless `--allow-skill-audit-miss` is passed. Enforcement is skipped (with a `skill-audit-miss` warning) when `telemetry.skillInvocations` is `false`. |
+| `skillAudit.required` | `string[]` | `[]` | Skill IDs that must be invoked before a phase settles. At `cadence settle run`, this set is unioned with the DRAFT's `requiredSkills` and each successfully-resolved enabled pack's `skillAudit.required` (Phase 291); if any are missing from telemetry, settle refuses unless `--allow-skill-audit-miss` is passed. `SUMMARY.json`'s `skillAudit.provenance` records which source (`config`/`draft`/`pack:<id>`) demanded each skill. Enforcement is skipped (with a `skill-audit-miss` warning) when `telemetry.skillInvocations` is `false`. |
 
 ---
 
