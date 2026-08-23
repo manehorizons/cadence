@@ -10,6 +10,6 @@ Fix: `cadence doctor`'s `host-hooks` check now verifies that every managed hook 
 
 The expected hook set is a single source of truth in `@thomas-powers-jr/cadence-host-toolkit` (`CLAUDE_CODE_EXPECTED_HOOKS`), which `install.ts` now builds its installed shape from directly. `@thomas-powers-jr/cadence-core` cannot import host-adapter packages, so it holds its own independent copy for the doctor check; a dedicated test in `@thomas-powers-jr/cadence-host-claude-code` (which depends on both) pins the two against each other so they cannot silently drift apart.
 
-`checkCodexHooks` (`.codex/hooks.json`) has the identical existence-only gap and is deliberately left unfixed in this change — Codex's expected hook shape differs genuinely (different event names, `apply_patch` matcher) and is out of scope here; the gap is filed as its own follow-up recommendation rather than silently left unaddressed.
+`checkCodexHooks` (`.codex/hooks.json`) has the identical existence-only gap and is deliberately left unfixed in this change — Codex's expected hook shape differs genuinely (different event names, `apply_patch` matcher) and is out of scope here; the gap is filed as `rec-20260823-006`, its own follow-up recommendation, rather than silently left unaddressed.
 
 Closes `rec-20260823-005`.

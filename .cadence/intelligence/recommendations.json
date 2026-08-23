@@ -2438,35 +2438,34 @@
       "updatedAt": "2026-08-23T15:01:45.883Z"
     },
     {
-      "id": "rec-20260823-005",
-      "title": "doctor's host-hooks check passes on a partial/incomplete managed hook install",
-      "summary": "checkHostHooks (packages/core/src/doctor/run.ts) reports 'ok' as long as ANY _managedBy:'cadence' PostToolUse entry exists, not that all desired entries do. This repo's own .claude/settings.json is missing the Skill-tool matcher that packages/host-claude-code/src/install.ts:98 registers (matched(SKILL_TOOL_MATCHER), alongside matched(EDIT_TOOL_MATCHER)) -- so the skill-invoke hook path (packages/host-toolkit/src/routing.ts:34) never fires, state.skillAudit.invoked never populates, and doctor reports host-hooks: ok throughout. Any config/draft/pack skillAudit.required declaration in this state hard-refuses every settle (runSkillAuditCheck, severity error) with no diagnostic pointing at the real cause. The managed-marker merge logic itself (install-merge.ts) is correct and would add the missing entry on a re-run of cadence-host-claude-code install -- the bug is that nothing detects or prompts for that re-run; it is a silent, self-report-shaped gap in the exact tool (doctor) this project relies on to report whether its own mechanisms are wired.",
+      "id": "rec-20260823-006",
+      "title": "checkCodexHooks has the identical existence-only completeness gap that phase 295 fixed for checkHostHooks",
+      "summary": "Phase 295 fixed checkHostHooks (.claude/settings.json) to verify completeness (every managed hook entry the installer writes is present), not just existence (hasManagedCadence finding any single non-stale marker). checkCodexHooks (packages/core/src/doctor/run.ts), which checks .codex/hooks.json, shares the identical hasManagedCadence-based existence-only predicate and was deliberately left unfixed in that phase -- Codex's expected hook shape genuinely differs (different event names, host-codex's apply_patch matcher vs Claude Code's edit-tool/Skill matchers), so phase 295's Claude-Code-specific CLAUDE_CODE_EXPECTED_HOOKS/findMissingManagedHooks design does not directly generalize. A new test (packages/core/tests/doctor/host-checks.test.ts, '295-01/AC-7') pins this as a deliberate, tested deferral: checkCodexHooks still reports ok on a single managed marker. Fixing it would need an analogous host-codex-specific expected-hooks list and its own drift test against host-codex's installer.",
       "source": "manual",
       "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "high",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
       "leverageScore": 5,
       "riskScore": 5,
       "confidence": 0.7,
       "decayState": "fresh",
       "affectedAreas": [
         "doctor",
-        "packs",
+        "codex",
         "skillAudit"
       ],
       "affectedFiles": [
-        "packages/core/src/doctor/run.ts",
-        ".claude/settings.json"
+        "packages/core/src/doctor/run.ts"
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260823-005"
+        "ev-20260823-006"
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "scoutId": "scout-20260823-first-pack",
-      "createdAt": "2026-08-23T18:15:08.470Z",
-      "updatedAt": "2026-08-23T18:15:08.470Z"
+      "scoutId": "scout-20260823-host-hooks-completeness",
+      "createdAt": "2026-08-23T20:24:29.144Z",
+      "updatedAt": "2026-08-23T20:24:29.144Z"
     }
   ],
   "archived": [
@@ -9170,11 +9169,45 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "scoutId": "scout-20260823-first-pack",
-      "createdAt": "2026-08-23T18:15:08.293Z",
-      "updatedAt": "2026-08-23T18:34:04.884Z",
       "shippedRef": "phase 294",
+      "scoutId": "scout-20260823-first-pack",
       "archivedAt": "2026-08-23T18:34:04.884Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-23T18:15:08.293Z",
+      "updatedAt": "2026-08-23T18:34:04.884Z"
+    },
+    {
+      "id": "rec-20260823-005",
+      "title": "doctor's host-hooks check passes on a partial/incomplete managed hook install",
+      "summary": "checkHostHooks (packages/core/src/doctor/run.ts) reports 'ok' as long as ANY _managedBy:'cadence' PostToolUse entry exists, not that all desired entries do. This repo's own .claude/settings.json is missing the Skill-tool matcher that packages/host-claude-code/src/install.ts:98 registers (matched(SKILL_TOOL_MATCHER), alongside matched(EDIT_TOOL_MATCHER)) -- so the skill-invoke hook path (packages/host-toolkit/src/routing.ts:34) never fires, state.skillAudit.invoked never populates, and doctor reports host-hooks: ok throughout. Any config/draft/pack skillAudit.required declaration in this state hard-refuses every settle (runSkillAuditCheck, severity error) with no diagnostic pointing at the real cause. The managed-marker merge logic itself (install-merge.ts) is correct and would add the missing entry on a re-run of cadence-host-claude-code install -- the bug is that nothing detects or prompts for that re-run; it is a silent, self-report-shaped gap in the exact tool (doctor) this project relies on to report whether its own mechanisms are wired.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "doctor",
+        "packs",
+        "skillAudit"
+      ],
+      "affectedFiles": [
+        "packages/core/src/doctor/run.ts",
+        ".claude/settings.json"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260823-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260823-first-pack",
+      "createdAt": "2026-08-23T18:15:08.470Z",
+      "updatedAt": "2026-08-23T20:24:51.898Z",
+      "shippedRef": "phase 295",
+      "archivedAt": "2026-08-23T20:24:51.898Z",
       "archiveReason": "shipped"
     }
   ]

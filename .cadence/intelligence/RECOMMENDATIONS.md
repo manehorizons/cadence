@@ -1362,18 +1362,18 @@ Phase 292's wave-1 dispatch ran 4 mutating subagents (T1/T3/T4/T5) concurrently 
 
 docs/packs-design.md §7 Slice 4 (marked 'stretch -- may land after this arc closes'; Slices 1-3, the arc's committed scope, are now all shipped as of phase 292). A pack manifest's commands[] field (already parsed by PackManifestZ since Slice 1, currently unconsumed by any check) should be verified by cadence doctor -- confirming each declared command actually exists/registers in the CLI -- matching D-AP's explicit exclusion of commands from anything gate-shaped (doctor-checked only, never enforced, no refusal path). Acceptance per the design doc: a pack declaring a command that doesn't exist in the CLI's registered command set is flagged by doctor; a pack declaring a real command is a clean pass. Scope is intentionally narrow -- this is an observability check, not a new enforcement surface, consistent with commands never appearing in the Gate enum or DELTAS matrix.
 
-## rec-20260823-005 — doctor's host-hooks check passes on a partial/incomplete managed hook install
+## rec-20260823-006 — checkCodexHooks has the identical existence-only completeness gap that phase 295 fixed for checkHostHooks
 
 - status: candidate
-- ready: needs-decision
-- priority: high
+- ready: ready-for-cadence-spec
+- priority: medium
 - leverage: 5/10
 - risk: 5/10
 - confidence: 70%
 - decay: fresh
-- areas: doctor, packs, skillAudit
-- files: packages/core/src/doctor/run.ts, .claude/settings.json
-- evidence: measured 2026-08-23: this repo's live .claude/settings.json PostToolUse array has only the edit-tool matcher entry, missing SKILL_TOOL_MATCHER; cadence doctor reports 'host-hooks: CADENCE-managed hook entries are present in settings.json' (ok) regardless; a synthetic hook payload (echo '{"hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"phase-build"}}' | cadence-host-claude-code hook) proves handleSkillInvoke itself works correctly and records the bare skill-name string when actually invoked -- the harness never delivers that payload because the matcher is missing
+- areas: doctor, codex, skillAudit
+- files: packages/core/src/doctor/run.ts
+- evidence: measured 2026-08-23: packages/core/src/doctor/run.ts's checkCodexHooks (.codex/hooks.json) and checkHostHooks (.claude/settings.json, pre-phase-295) both relied solely on hasManagedCadence (packages/core/src/doctor/host-hooks.ts) -- existence of any single non-stale marker, not completeness. Phase 295 fixed checkHostHooks; checkCodexHooks's identical gap is unchanged, confirmed by an empty git diff on that function and a new pinning test (295-01/AC-7) asserting its unaffected ok-on-single-marker behavior.
 - next: cadence milestone propose
 
-checkHostHooks (packages/core/src/doctor/run.ts) reports 'ok' as long as ANY _managedBy:'cadence' PostToolUse entry exists, not that all desired entries do. This repo's own .claude/settings.json is missing the Skill-tool matcher that packages/host-claude-code/src/install.ts:98 registers (matched(SKILL_TOOL_MATCHER), alongside matched(EDIT_TOOL_MATCHER)) -- so the skill-invoke hook path (packages/host-toolkit/src/routing.ts:34) never fires, state.skillAudit.invoked never populates, and doctor reports host-hooks: ok throughout. Any config/draft/pack skillAudit.required declaration in this state hard-refuses every settle (runSkillAuditCheck, severity error) with no diagnostic pointing at the real cause. The managed-marker merge logic itself (install-merge.ts) is correct and would add the missing entry on a re-run of cadence-host-claude-code install -- the bug is that nothing detects or prompts for that re-run; it is a silent, self-report-shaped gap in the exact tool (doctor) this project relies on to report whether its own mechanisms are wired.
+Phase 295 fixed checkHostHooks (.claude/settings.json) to verify completeness (every managed hook entry the installer writes is present), not just existence (hasManagedCadence finding any single non-stale marker). checkCodexHooks (packages/core/src/doctor/run.ts), which checks .codex/hooks.json, shares the identical hasManagedCadence-based existence-only predicate and was deliberately left unfixed in that phase -- Codex's expected hook shape genuinely differs (different event names, host-codex's apply_patch matcher vs Claude Code's edit-tool/Skill matchers), so phase 295's Claude-Code-specific CLAUDE_CODE_EXPECTED_HOOKS/findMissingManagedHooks design does not directly generalize. A new test (packages/core/tests/doctor/host-checks.test.ts, '295-01/AC-7') pins this as a deliberate, tested deferral: checkCodexHooks still reports ok on a single managed marker. Fixing it would need an analogous host-codex-specific expected-hooks list and its own drift test against host-codex's installer.
