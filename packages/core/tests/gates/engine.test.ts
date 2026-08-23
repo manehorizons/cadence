@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mkdir, writeFile } from 'node:fs/promises';
-import type { Profile, Tier } from '@thomas-powers-jr/cadence-types';
+import type { Gate, Profile, Tier } from '@thomas-powers-jr/cadence-types';
 import {
   effectiveGateSet,
   effectiveProfile,
@@ -312,17 +312,17 @@ describe('274-01: DELTAS standard × complex reachability', () => {
 
 describe('effectiveGateSet', () => {
   it('uses draft tier when present, else state.tier', () => {
-    const set1 = effectiveGateSet({ tier: 'quick-fix' }, { profile: 'auto' }, null);
+    const set1 = effectiveGateSet({ tier: 'quick-fix' }, { profile: 'auto' }, null, []);
     expect(set1.softCap).toBe(false);
     const set2 = effectiveGateSet({ tier: 'quick-fix' }, { profile: 'auto' }, {
       tier: 'complex',
       profile: undefined,
-    });
+    }, []);
     expect(set2.softCap).toBe(true);
   });
 
   it('defaults to standard tier + auto profile when nothing is specified', () => {
-    const set = effectiveGateSet({ tier: null }, null, null);
+    const set = effectiveGateSet({ tier: null }, null, null, []);
     expect(set.gates).toEqual([
       ...ALWAYS,
       'test-coverage',
@@ -331,19 +331,245 @@ describe('effectiveGateSet', () => {
     ]);
     expect(set.softCap).toBe(false);
   });
+
+  // AC-1: pack gates are merged into effectiveGateSet output when (profile, tier) matches.
+  it('AC-1: includes pack-contributed gates when pack profile and tier match the active cell', () => {
+    // Real Gate enum members (not an `any`-cast fake string) so this test
+    // exercises the actual GateZ type. Both are genuinely absent from
+    // DELTAS.standard.complex + ALWAYS_FIRE (the cell this test targets) —
+    // 'boundary-scan' is unused by any (profile, tier) cell in DELTAS at
+    // all, and 'plan-review' is only used under the strict profile.
+    const packGate1: Gate = 'boundary-scan';
+    const packGate2: Gate = 'plan-review';
+
+    const resolvedPacks = [
+      {
+        id: 'cadence/test-pack',
+        source: 'local' as const,
+        manifest: {
+          id: 'cadence/test-pack',
+          version: '1.0.0',
+          gates: [
+            {
+              profile: 'standard' as const,
+              tier: 'complex' as const,
+              add: [packGate1, packGate2],
+            },
+          ],
+        },
+      },
+    ];
+
+    // Test that pack-added gates appear when profile and tier match
+    const set = effectiveGateSet(
+      { tier: 'complex' },
+      { profile: 'standard' },
+      null,
+      resolvedPacks,
+    );
+
+    expect(set.gates).toContain(packGate1);
+    expect(set.gates).toContain(packGate2);
+    expect(new Set(set.gates).size).toBe(set.gates.length); // Verify no duplicates
+  });
+
+  // AC-1: pack gates must not appear when (profile, tier) doesn't match.
+  it('AC-1: does not include pack-contributed gates when profile or tier does not match', () => {
+    // Real Gate enum member, absent from every DELTAS cell exercised below.
+    const packGate: Gate = 'boundary-scan';
+
+    const resolvedPacks = [
+      {
+        id: 'cadence/test-pack',
+        source: 'local' as const,
+        manifest: {
+          id: 'cadence/test-pack',
+          version: '1.0.0',
+          gates: [
+            {
+              profile: 'standard' as const,
+              tier: 'complex' as const,
+              add: [packGate],
+            },
+          ],
+        },
+      },
+    ];
+
+    // Different tier should not include pack gate
+    const set1 = effectiveGateSet(
+      { tier: 'standard' },
+      { profile: 'standard' },
+      null,
+      resolvedPacks,
+    );
+    expect(set1.gates).not.toContain(packGate);
+
+    // Different profile should not include pack gate
+    const set2 = effectiveGateSet(
+      { tier: 'complex' },
+      { profile: 'auto' },
+      null,
+      resolvedPacks,
+    );
+    expect(set2.gates).not.toContain(packGate);
+  });
+
+  // AC-1: errored/unresolved packs must not contribute gates. The prior
+  // version of this test used a fake gate name that never appeared anywhere
+  // in the errored-pack input (the `error` variant of ResolvedPack carries no
+  // `gates` field at all) — `expect(set.gates).not.toContain(packGate)` was
+  // therefore true under ANY implementation and never actually exercised the
+  // `'manifest' in pack` guard in effectiveGateSet. This version uses a MIXED
+  // array — one errored pack and one valid, resolved pack, both targeting
+  // the same matching (profile, tier) cell — so a broken guard (e.g. one
+  // that crashes on `pack.manifest` for the errored entry, or that
+  // conflates the two array entries) would actually be caught.
+  it('AC-1: does not include gates from unresolved (errored) packs, and still merges a co-resolved valid pack correctly', () => {
+    // Real Gate enum member, absent from DELTAS.standard.complex + ALWAYS_FIRE
+    // — the cell both packs below target — so its presence in the output can
+    // only come from the valid pack's contribution.
+    const validPackGate: Gate = 'security-audit';
+
+    const resolvedPacks = [
+      // Errored pack: same id "shape" as the valid one below, so a guard bug
+      // that conflates array entries (rather than checking `'manifest' in
+      // pack` per-entry) would plausibly leak into — or crash on — this one.
+      {
+        id: 'cadence/broken-pack',
+        source: 'local' as const,
+        error: 'Pack manifest not found',
+      },
+      {
+        id: 'cadence/valid-pack',
+        source: 'local' as const,
+        manifest: {
+          id: 'cadence/valid-pack',
+          version: '1.0.0',
+          gates: [
+            {
+              profile: 'standard' as const,
+              tier: 'complex' as const,
+              add: [validPackGate],
+            },
+          ],
+        },
+      },
+    ];
+
+    const set = effectiveGateSet(
+      { tier: 'complex' },
+      { profile: 'standard' },
+      null,
+      resolvedPacks,
+    );
+
+    // The valid, co-resolved pack's gate must land in the result — proving
+    // the errored entry didn't crash the merge or swallow its sibling.
+    expect(set.gates).toContain(validPackGate);
+    // The errored pack must contribute nothing (no phantom gate, no crash —
+    // the call above completing at all is part of that proof).
+    expect(set.gates).toContain('coherence-check');
+  });
+
+  // AC-1: dedup has real, falsifiable coverage. The pack fixtures in the
+  // "includes pack-contributed gates" test above never overlap each other or
+  // the base cell, so `new Set(set.gates).size === set.gates.length` there
+  // can't fail regardless of whether the `if (!seen.has(g))` dedup guard in
+  // effectiveGateSet exists at all — deleting that guard and rerunning the
+  // suite left all tests green. These two assertions use REAL overlap so a
+  // missing/broken dedup guard actually fails them.
+  it('AC-1: dedups a pack gate that overlaps the base gate set, and a gate two packs both add', () => {
+    // 'code-review' is already present in DELTAS.standard.complex, so a pack
+    // re-adding it must not produce a second occurrence.
+    const overlappingBaseGate: Gate = 'code-review';
+    const overlapResolvedPacks = [
+      {
+        id: 'cadence/overlap-pack',
+        source: 'local' as const,
+        manifest: {
+          id: 'cadence/overlap-pack',
+          version: '1.0.0',
+          gates: [
+            {
+              profile: 'standard' as const,
+              tier: 'complex' as const,
+              add: [overlappingBaseGate],
+            },
+          ],
+        },
+      },
+    ];
+
+    const overlapSet = effectiveGateSet(
+      { tier: 'complex' },
+      { profile: 'standard' },
+      null,
+      overlapResolvedPacks,
+    );
+
+    expect(overlapSet.gates.filter((g) => g === overlappingBaseGate)).toHaveLength(1);
+    expect(new Set(overlapSet.gates).size).toBe(overlapSet.gates.length);
+
+    // Two separate packs both adding the same novel gate (absent from the
+    // base cell) must still yield a single occurrence in the result.
+    const sharedNovelGate: Gate = 'boundary-scan';
+    const twoPackResolvedPacks = [
+      {
+        id: 'cadence/pack-a',
+        source: 'local' as const,
+        manifest: {
+          id: 'cadence/pack-a',
+          version: '1.0.0',
+          gates: [
+            { profile: 'standard' as const, tier: 'complex' as const, add: [sharedNovelGate] },
+          ],
+        },
+      },
+      {
+        id: 'cadence/pack-b',
+        source: 'local' as const,
+        manifest: {
+          id: 'cadence/pack-b',
+          version: '1.0.0',
+          gates: [
+            { profile: 'standard' as const, tier: 'complex' as const, add: [sharedNovelGate] },
+          ],
+        },
+      },
+    ];
+
+    const twoPackSet = effectiveGateSet(
+      { tier: 'complex' },
+      { profile: 'standard' },
+      null,
+      twoPackResolvedPacks,
+    );
+
+    expect(twoPackSet.gates.filter((g) => g === sharedNovelGate)).toHaveLength(1);
+    expect(new Set(twoPackSet.gates).size).toBe(twoPackSet.gates.length);
+  });
 });
 
-// Phase 290 T4 (AC-6) — zero-behavioral-effect regression proof: gate computation
-// is independent of pack resolution. This describe block provides two falsifiable
-// assertions: (a) that gatesFor()/effectiveGateSet() output is byte-identical
-// whether or not packs are enabled and resolved, and (b) a structural coupling
-// check: gates/ stays fully decoupled from packs/ (zero imports, unchanged
-// since phase 290), while services/ has exactly one deliberate, asserted
-// consumer — settle.ts — which phase 291 (Slice 2) wires to `resolvePacks`
-// for the skill-audit union (T2) and the unresolvable-pack refusal (T3). Any
-// OTHER file under services/ importing from packs/ is still a failure;
-// gates/ itself is untouched until Slice 3.
-describe('290-01: pack resolution has zero behavioral effect on gate computation (AC-6)', () => {
+// Phase 290 T4 (AC-6) — originally a zero-behavioral-effect regression proof
+// that gate computation was independent of pack resolution. As of Phase 292
+// Slice 3, `effectiveGateSet` (unlike `gatesFor`, which remains untouched and
+// pack-unaware) DOES read `resolvedPacks` — see the 292-01/AC-1 test below,
+// which asserts engine.ts is now a deliberate, single packs/ consumer under
+// gates/. This describe block still provides two falsifiable assertions,
+// updated for that reality: (a) that gatesFor()/effectiveGateSet() output is
+// byte-identical to ALWAYS_FIRE+DELTAS for this specific fixture — not
+// because nothing reads the resolved pack, but because the fixture pack's
+// manifest has no `gates` field at all, so effectiveGateSet's
+// `pack.manifest.gates` guard correctly contributes zero gates from it — and
+// (b) a structural coupling check: services/ has exactly four deliberate,
+// asserted consumers — settle.ts, which phase 291 (Slice 2) wires to
+// `resolvePacks` for the skill-audit union (T2) and the unresolvable-pack
+// refusal (T3), plus draft-approve.ts, draft-check.ts, and build-task.ts,
+// which phase 292 (Slice 3) wires to `resolvePacks` alongside
+// `effectiveGateSet`'s new `resolvedPacks` parameter. Any OTHER file under
+// services/ importing from packs/ is still a failure.
+describe('290-01: pack resolution has zero behavioral effect on gate computation with a gates-less pack manifest (AC-6)', () => {
   let active: Fixture | null = null;
   afterEach(async () => {
     if (active) {
@@ -352,7 +578,7 @@ describe('290-01: pack resolution has zero behavioral effect on gate computation
     }
   });
 
-  it('290-01/AC-6: gatesFor/effectiveGateSet output is byte-identical to ALWAYS_FIRE+DELTAS even with a pack enabled and successfully resolved in fixture setup (no consumer reads the resolved pack)', async () => {
+  it('290-01/AC-6: gatesFor/effectiveGateSet output is byte-identical to ALWAYS_FIRE+DELTAS with a pack enabled and successfully resolved in fixture setup, because its manifest has no `gates` field (effectiveGateSet DOES read resolvedPacks — it just has nothing to contribute here)', async () => {
     // Set up fixture with a valid, resolvable pack enabled.
     active = await tempRepo({ initialized: true });
     const packDir = join(active.root, '.cadence/packs/cadence/test-pack');
@@ -413,7 +639,7 @@ describe('290-01: pack resolution has zero behavioral effect on gate computation
     // Also test effectiveGateSet with the same fixture state (packs enabled/resolved).
     const draftTier: Tier = 'standard';
     const configProfile: Profile = 'auto';
-    const effectiveSet = effectiveGateSet({ tier: draftTier }, { profile: configProfile }, null);
+    const effectiveSet = effectiveGateSet({ tier: draftTier }, { profile: configProfile }, null, resolved);
 
     const expectedDeltaGates = DELTAS[configProfile]?.[draftTier] ?? [];
     const expectedEffectiveGates = [...new Set([...ALWAYS_FIRE, ...expectedDeltaGates])];
@@ -422,21 +648,44 @@ describe('290-01: pack resolution has zero behavioral effect on gate computation
     expect(new Set(effectiveSet.gates).size).toBe(effectiveSet.gates.length);
   });
 
-  it('291-01/AC-3: structural coupling assertion — gates/ stays zero-import, services/ has exactly one deliberate packs/ consumer (settle.ts)', () => {
+  it('292-01/AC-1: structural coupling assertion — Phase 292 Slice 3 threads resolvedPacks through effectiveGateSet, so gates/ has exactly one deliberate packs/ consumer (engine.ts), services/ has exactly the four that resolve packs for a real call site, and hooks/ and notify/ each have exactly the one call site (handlers.ts, loop-violation.ts) that Slice 3 also wired up', () => {
     // Compute repo root: tests live at packages/core/tests/gates/engine.test.ts,
     // so four levels up.
     const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
     const gatesDir = join(repoRoot, 'packages/core/src/gates');
     const servicesDir = join(repoRoot, 'packages/core/src/services');
+    const hooksDir = join(repoRoot, 'packages/core/src/hooks');
+    const notifyDir = join(repoRoot, 'packages/core/src/notify');
+    const engineTsPath = join(gatesDir, 'engine.ts');
     const settleTsPath = join(servicesDir, 'settle.ts');
+    // Phase 292 (Slice 3, T2): the three services/ files that joined settle.ts
+    // as packs/ consumers when `effectiveGateSet` gained its required
+    // `resolvedPacks` parameter. Each resolves packs because its gate set
+    // drives a real command-boundary enforcement decision — see each file's
+    // own inline rationale.
+    const draftApproveTsPath = join(servicesDir, 'draft-approve.ts');
+    const draftCheckTsPath = join(servicesDir, 'draft-check.ts');
+    const buildTaskTsPath = join(servicesDir, 'build-task.ts');
+    // Phase 292 (Slice 3): two more closed sets outside gates/ and services/
+    // that also gained a packs/ consumer — hooks/handlers.ts and
+    // notify/loop-violation.ts. Scanning only gates/ and services/ would miss
+    // a future PR adding MORE packs/ imports under hooks/ or notify/.
+    const handlersTsPath = join(hooksDir, 'handlers.ts');
+    const loopViolationTsPath = join(notifyDir, 'loop-violation.ts');
 
-    // gates/ and services/ are scanned and scored separately: gates/ keeps its
-    // pre-291 zero-imports bar unchanged (290-01/AC-6), while services/ is now
-    // allowed exactly one deliberate consumer of packs/ (settle.ts, wired in
-    // phase 291 Slice 2 T2) and fails if any OTHER services/ file also reaches
-    // into packs/.
+    // Phase 292 Slice 3: gates/ now has exactly one deliberate packs/ consumer
+    // (engine.ts, which threads resolvedPacks through effectiveGateSet per AC-1).
+    // This replaces the earlier 290-01/AC-6 zero-import bar once Slice 3 lands.
+    // services/ grew from Phase 291's single consumer (settle.ts) to exactly
+    // four: `effectiveGateSet`'s no-default `resolvedPacks` parameter makes a
+    // missed call site a compile error, and every services/ call site turned
+    // out to need real resolution. The list stays EXACT rather than being
+    // loosened to "at least settle.ts" — a fifth, unreviewed consumer
+    // appearing must still fail this test.
     const offendingGatesFiles: string[] = [];
     const offendingServicesFiles: string[] = [];
+    const offendingHooksFiles: string[] = [];
+    const offendingNotifyFiles: string[] = [];
     // A directory-walk failure (bad path, permissions, a moved directory)
     // must not silently produce a vacuous green — an unreached scan means
     // zero files examined, which is indistinguishable from "examined every
@@ -500,35 +749,74 @@ describe('290-01: pack resolution has zero behavioral effect on gate computation
 
     scanDir(gatesDir, offendingGatesFiles);
     scanDir(servicesDir, offendingServicesFiles);
+    scanDir(hooksDir, offendingHooksFiles);
+    scanDir(notifyDir, offendingNotifyFiles);
 
     // Guard against the scan itself silently finding nothing to look at.
     expect(filesScanned).toBeGreaterThan(0);
 
-    // gates/ (290-01/AC-6): unchanged, zero-tolerance bar — Slice 3's boundary,
-    // not touched by this phase.
+    // gates/ (292-01/AC-1): now has exactly one deliberate packs/ consumer —
+    // engine.ts, which threads resolvedPacks through effectiveGateSet per Slice 3.
+    // This supersedes the Phase 290 zero-import bar once Slice 3 lands.
     expect(offendingGatesFiles).toEqual(
-      [],
-      `Files in gates/ must not import from packs/. Found imports in: ${offendingGatesFiles.join(
+      [engineTsPath],
+      `gates/ must have exactly one packs/ consumer (engine.ts). Found imports in: ${offendingGatesFiles.join(
         ', ',
       )}`,
     );
 
-    // services/ (291-01/AC-3): exactly one deliberate, asserted consumer —
-    // settle.ts. Any other services/ file importing from packs/ is a failure.
-    expect(offendingServicesFiles).toEqual(
-      [settleTsPath],
-      `services/ must have exactly one packs/ consumer (settle.ts). Found imports in: ${offendingServicesFiles.join(
+    // services/ (291-01/AC-3, extended by 292-01/AC-1): exactly four
+    // deliberate, asserted consumers — settle.ts (Phase 291's skill-audit
+    // union, now also feeding `resolveSettleGateSet`) plus the three call
+    // sites Slice 3 wired up. Any OTHER services/ file importing from packs/
+    // is still a failure. Sorted on both sides because `readdirSync` order is
+    // filesystem-dependent, not guaranteed alphabetical.
+    const expectedServicesConsumers = [
+      settleTsPath,
+      draftApproveTsPath,
+      draftCheckTsPath,
+      buildTaskTsPath,
+    ].sort();
+    expect([...offendingServicesFiles].sort()).toEqual(
+      expectedServicesConsumers,
+      `services/ must have exactly four packs/ consumers (settle.ts, draft-approve.ts, draft-check.ts, build-task.ts). Found imports in: ${offendingServicesFiles.join(
+        ', ',
+      )}`,
+    );
+
+    // hooks/ (292-01/AC-1 extension): exactly one deliberate, asserted
+    // consumer — handlers.ts. Any OTHER file under hooks/ importing from
+    // packs/ is still a failure.
+    expect(offendingHooksFiles).toEqual(
+      [handlersTsPath],
+      `hooks/ must have exactly one packs/ consumer (handlers.ts). Found imports in: ${offendingHooksFiles.join(
+        ', ',
+      )}`,
+    );
+
+    // notify/ (292-01/AC-1 extension): exactly one deliberate, asserted
+    // consumer — loop-violation.ts. Any OTHER file under notify/ importing
+    // from packs/ is still a failure.
+    expect(offendingNotifyFiles).toEqual(
+      [loopViolationTsPath],
+      `notify/ must have exactly one packs/ consumer (loop-violation.ts). Found imports in: ${offendingNotifyFiles.join(
         ', ',
       )}`,
     );
 
     // Falsifiable in both directions (same reasoning as the filesScanned
-    // guard above): if settle.ts's packs/ import is ever removed, this
+    // guard above): if any asserted file's packs/ import is ever removed, this
     // positive assertion fails rather than letting the test silently become
-    // stricter than intended (a services/ scan with zero offenders would
-    // otherwise pass the `toEqual([])`-shaped check just as easily as the
-    // real "exactly settle.ts" case).
-    const settleTsContent = readFileSync(settleTsPath, 'utf8');
-    expect(settleTsContent).toMatch(/from\s+['"`][^'"`]*\/packs\/resolve\.js['"`]/);
+    // stricter than intended.
+    const engineTsContent = readFileSync(engineTsPath, 'utf8');
+    expect(engineTsContent).toMatch(/from\s+['"`][^'"`]*\/packs\/resolve\.js['"`]/);
+
+    for (const p of expectedServicesConsumers) {
+      expect(readFileSync(p, 'utf8')).toMatch(/from\s+['"`][^'"`]*\/packs\/resolve\.js['"`]/);
+    }
+
+    for (const p of [handlersTsPath, loopViolationTsPath]) {
+      expect(readFileSync(p, 'utf8')).toMatch(/from\s+['"`][^'"`]*\/packs\/resolve\.js['"`]/);
+    }
   });
 });

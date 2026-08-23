@@ -1,6 +1,7 @@
-import type { CadenceConfig, Tier } from '@thomas-powers-jr/cadence-types';
+import type { CadenceConfig, Gate, Profile, Tier } from '@thomas-powers-jr/cadence-types';
 import { MOCK_VERIFIER_NOTICE, MOCK_VERIFIER_CAPABILITY } from '@thomas-powers-jr/cadence-types';
 import { effectiveProfile, gatesFor } from '../gates/engine.js';
+import type { ResolvedPack } from '../packs/resolve.js';
 import type {
   ConfigExplanation,
   ExplainContext,
@@ -43,6 +44,44 @@ function providerRows(config: CadenceConfig): ProviderRow[] {
   });
 }
 
+/** One `gates[].add` contribution matched to a (profile, tier) cell, with its source pack. */
+interface PackGateContribution {
+  gate: Gate;
+  packId: string;
+}
+
+/**
+ * Phase 292 (Slice 3, §4b/§7): the gates enabled packs contribute for one
+ * (profile, tier) cell — same matching logic `effectiveGateSet` (engine.ts)
+ * uses: a pack's `gates[].add` entry applies when both its `profile` and
+ * `tier` equal the cell being asked about. Only the successfully-resolved
+ * (`manifest`) variant of `ResolvedPack` contributes; an errored pack is
+ * silently skipped here, exactly as `effectiveGateSet` treats it as
+ * contributing nothing. This is called only for the current-tier row in
+ * the `TIERS.map` loop below — every other row keeps calling raw
+ * `gatesFor` unconditionally.
+ */
+function packContributedGatesFor(
+  profile: Profile,
+  tier: Tier,
+  resolvedPacks: ReadonlyArray<ResolvedPack>,
+): PackGateContribution[] {
+  const seen = new Set<Gate>();
+  const contributions: PackGateContribution[] = [];
+  for (const pack of resolvedPacks) {
+    if (!('manifest' in pack)) continue; // errored resolution — contributes nothing
+    for (const delta of pack.manifest.gates ?? []) {
+      if (delta.profile !== profile || delta.tier !== tier) continue;
+      for (const gate of delta.add) {
+        if (seen.has(gate)) continue;
+        seen.add(gate);
+        contributions.push({ gate, packId: pack.id });
+      }
+    }
+  }
+  return contributions;
+}
+
 /**
  * Derive the config-semantic foot-gun warnings: places where the config says one
  * thing but the runtime effect is another. Each message ends by pointing at
@@ -53,6 +92,8 @@ function deriveWarnings(
   ctx: ExplainContext,
   rows: ProviderRow[],
   complexSoftCap: boolean,
+  /** Already filtered to genuine additions — see call site in buildExplanation. */
+  currentTierAdditions: PackGateContribution[],
 ): Warning[] {
   const warnings: Warning[] = [];
 
@@ -117,6 +158,24 @@ function deriveWarnings(
     });
   }
 
+  // 5. An enabled pack's gates[].add matched the active phase's (profile,
+  // tier) cell AND actually added something not already in the raw
+  // gatesFor() output for that cell — the current-tier row is now
+  // pack-augmented. Phase 292 (Slice 3, §4b/§7): surface the divergence
+  // explicitly rather than leaving it to be inferred from a longer gate
+  // list, mirroring the precedent set by warnings 1-4 above. The caller
+  // has already filtered `currentTierAdditions` down to genuine
+  // additions (gates not already present via gatesFor) — a pack whose
+  // `add` merely restates an existing DELTAS entry must not trip this.
+  if (currentTierAdditions.length > 0) {
+    const gateNames = [...new Set(currentTierAdditions.map((c) => c.gate))].join(', ');
+    const packIds = [...new Set(currentTierAdditions.map((c) => c.packId))].join(', ');
+    warnings.push({
+      code: 'packs-augment-current-tier',
+      message: `the current tier's row above is pack-augmented: enabled pack(s) ${packIds} added ${gateNames} to it, on top of the raw gatesFor() gates. Every other tier's row in the table above is unaffected — it still shows raw gatesFor() output, not reflecting any pack.`,
+    });
+  }
+
   return warnings;
 }
 
@@ -127,20 +186,42 @@ function deriveWarnings(
  */
 export function buildExplanation(config: CadenceConfig, ctx: ExplainContext): ConfigExplanation {
   const profile = effectiveProfile(config, null);
+  const resolvedPacks = ctx.resolvedPacks ?? [];
+
+  // Phase 292 (Slice 3, §4b/§7): compute pack contributions once, for the
+  // active tier only — the matrix table's other rows must stay raw
+  // `gatesFor` output, untouched, so this is never computed for a
+  // non-current tier below. Filtered down to genuine additions (gates not
+  // already present in the raw gatesFor() output for that cell) right
+  // here, once, so both the current-tier row and the warning below agree
+  // on exactly what diverged — a pack whose `add` merely restates an
+  // existing DELTAS entry contributes nothing observable and must not
+  // appear in either.
+  const currentTierAdditions: PackGateContribution[] = [];
+  if (ctx.activeTier !== null) {
+    const rawCurrentGates = gatesFor(ctx.activeTier, profile).gates;
+    for (const c of packContributedGatesFor(profile, ctx.activeTier, resolvedPacks)) {
+      if (!rawCurrentGates.includes(c.gate)) currentTierAdditions.push(c);
+    }
+  }
 
   const tiers: TierGateView[] = TIERS.map((tier) => {
     const set = gatesFor(tier, profile);
+    const isCurrent = ctx.activeTier === tier;
+    const additions = isCurrent ? currentTierAdditions.map((c) => c.gate) : [];
+    const gates = additions.length > 0 ? [...set.gates, ...additions] : set.gates;
     return {
       tier,
-      gates: set.gates,
+      gates,
       softCap: set.softCap,
-      current: ctx.activeTier === tier,
+      current: isCurrent,
+      packContributedGates: additions,
     };
   });
 
   const providers = providerRows(config);
   const complexSoftCap = tiers.find((t) => t.tier === 'complex')?.softCap ?? false;
-  const warnings = deriveWarnings(config, ctx, providers, complexSoftCap);
+  const warnings = deriveWarnings(config, ctx, providers, complexSoftCap, currentTierAdditions);
 
   return {
     profile,

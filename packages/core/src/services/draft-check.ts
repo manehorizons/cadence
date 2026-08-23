@@ -6,6 +6,7 @@ import { coherenceCheck } from '../coherence/check.js';
 import { SimpleStateBackend } from '../state/simple.js';
 import { loadConfig } from '../config/loader.js';
 import { effectiveGateSet } from '../gates/engine.js';
+import { resolvePacks, type ResolvedPack } from '../packs/resolve.js';
 import { buildDraftContext } from '../gates/draft-context.js';
 import { emitCoherenceWarns, printAllCoherenceIssues } from '../gates/coherence.js';
 import { formatCommandError } from './format-command-error.js';
@@ -37,9 +38,28 @@ export async function draftCheckService(
     // issues already printed loudly above; warns still emit even when blocked.
     if (issues.some((i) => i.severity === 'warn')) {
       const cfg = await loadConfig(repoRoot);
+      // Phase 292 (Slice 3, T2) — REAL pack resolution. This gate set is only
+      // read for `anomaly-notify` membership (`emitCoherenceWarns` below), but
+      // that is exactly a gate a pack can contribute: `anomaly-notify` is
+      // absent from all three `strict` cells and from `standard × quick-fix`
+      // in `DELTAS` (`gates/engine.ts`), so a pack adding it there is the
+      // difference between a coherence warn being emitted and being silently
+      // dropped. Narrow consumption is not a reason to skip resolution when
+      // the gate being probed is pack-reachable. Cost is bounded: this branch
+      // only runs when the draft actually has warn-severity issues.
+      // Best-effort catch per the `config-explain/gather.ts` idiom —
+      // `resolvePacks` folds failures into per-pack `{error}` entries and does
+      // not throw, so this is unreachable defense-in-depth that keeps
+      // `draft check` alive no matter what.
+      let resolvedPacks: ResolvedPack[] = [];
+      try {
+        resolvedPacks = await resolvePacks(repoRoot, cfg);
+      } catch {
+        resolvedPacks = [];
+      }
       const ctx = buildDraftContext({
         cwd: repoRoot, state, draft, config: cfg,
-        gateSet: effectiveGateSet(state, cfg, draft),
+        gateSet: effectiveGateSet(state, cfg, draft, resolvedPacks),
         phase: '', id: '', projectMd, opts: {},
       });
       await emitCoherenceWarns(ctx, 'coherence.check');

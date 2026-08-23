@@ -20,6 +20,7 @@ import { emitLoopViolation } from '../notify/loop-violation.js';
 import { selectNotifier } from '../notify/factory.js';
 import { loadConfig } from '../config/loader.js';
 import { effectiveBoundaryEnforcement, effectiveGateSet } from '../gates/engine.js';
+import { resolvePacks, type ResolvedPack } from '../packs/resolve.js';
 import { parseDraftMd } from '../parse/draft-parser.js';
 import { SimpleStateBackend } from '../state/simple.js';
 import { runPerTaskVerifyGate } from '../gates/per-task-verify.js';
@@ -177,6 +178,37 @@ export async function buildTaskService(
       return cachedConfig;
     };
 
+    // Phase 292 (Slice 3, T2) — REAL pack resolution, memoized the same way
+    // `getConfig` above is, so the two `effectiveGateSet` call sites in this
+    // function share ONE resolution per command run rather than re-reading
+    // every enabled pack's manifest twice.
+    //
+    // Both sites need it. The first (the per-task-verify gate ctx) is a real
+    // command-boundary enforcement decision — a pack adding `per-task-verify`
+    // or `task-verify-required` to the active cell must actually gate this
+    // task record. The second is only an `anomaly-notify` membership probe,
+    // but `anomaly-notify` is itself pack-reachable: `DELTAS`
+    // (`gates/engine.ts`) omits it from all three `strict` cells and from
+    // `standard × quick-fix`, so a pack adding it there is the difference
+    // between boundary/redundancy events being dispatched and silently
+    // dropped.
+    //
+    // Best-effort per the `config-explain/gather.ts` idiom: `resolvePacks`
+    // folds every read/parse/schema failure into a per-pack `{error}` entry
+    // instead of throwing, so this catch is unreachable defense-in-depth that
+    // guarantees pack resolution can never take `build task` down.
+    let cachedPacks: ResolvedPack[] | undefined;
+    const getResolvedPacks = async (): Promise<ResolvedPack[]> => {
+      if (!cachedPacks) {
+        try {
+          cachedPacks = await resolvePacks(repoRoot, await getConfig());
+        } catch {
+          cachedPacks = [];
+        }
+      }
+      return cachedPacks;
+    };
+
     let perTaskRecord: PerTaskVerifyRecord | undefined;
     if (status === 'DONE' && draft) {
       const cfg = await getConfig();
@@ -185,7 +217,7 @@ export async function buildTaskService(
         state,
         draft,
         config: cfg,
-        gateSet: effectiveGateSet(state, cfg, draft),
+        gateSet: effectiveGateSet(state, cfg, draft, await getResolvedPacks()),
         taskId: args.taskId,
         opts:
           args.allowPerTaskFailure !== undefined
@@ -360,7 +392,9 @@ export async function buildTaskService(
             : [...boundaryEvents, ...redundancyEvents];
           if (
             routineEvents.length > 0 &&
-            effectiveGateSet(state, cfg, draft).gates.includes('anomaly-notify')
+            effectiveGateSet(state, cfg, draft, await getResolvedPacks()).gates.includes(
+              'anomaly-notify',
+            )
           ) {
             try {
               await notifier.notify(routineEvents);

@@ -1,13 +1,13 @@
 # CADENCE Packs — Design (v1, internal-first)
 
-> **Status: Slice 1 shipped (phase 290); Slice 2 shipped (phase 291).** As
-> of Slice 1, `config.packs` is parsed and resolved — `resolvePacks()`
-> (`packages/core/src/packs/resolve.ts`) validates each enabled id's
-> `.cadence/packs/<id>/pack.json` against `PackManifestZ`
-> (`packages/types/src/pack.ts`), and `cadence doctor`'s `packs` check
-> surfaces whether each one resolves. As of Slice 2 a pack is a **real
-> behavioral contributor**: a resolved pack's `skillAudit.required` unions
-> into `runSkillAuditCheck`'s `effectiveRequired`
+> **Status: Slice 1 shipped (phase 290); Slice 2 shipped (phase 291); Slice 3
+> shipped (phase 292).** As of Slice 1, `config.packs` is parsed and
+> resolved — `resolvePacks()` (`packages/core/src/packs/resolve.ts`)
+> validates each enabled id's `.cadence/packs/<id>/pack.json` against
+> `PackManifestZ` (`packages/types/src/pack.ts`), and `cadence doctor`'s
+> `packs` check surfaces whether each one resolves. As of Slice 2 a pack is
+> a **real behavioral contributor**: a resolved pack's `skillAudit.required`
+> unions into `runSkillAuditCheck`'s `effectiveRequired`
 > (`packages/core/src/checks/skill-audit.ts`) and refuses settle exactly
 > like a config- or DRAFT-declared requirement, with each requirement
 > attributed to `config` / `draft` / `pack:<id>` in `SUMMARY.json`'s
@@ -15,13 +15,16 @@
 > hard settle-time refusal (`packages/core/src/checks/pack-resolution.ts`,
 > bypassable only via `--allow-unresolvable-pack`) and the `packs` doctor
 > check reports **`error`**, not Slice 1's `warning` (D-AR's two-phase plan,
-> phase two). **Gate computation still reads no pack** —
-> `gatesFor`/`effectiveGateSet` (`packages/core/src/gates/engine.ts`) remain
-> free of any `packs/` import, proven by a structural no-coupling test — so
-> a manifest's gate-profile delta (Slice 3) and slash-command declaration
-> (Slice 4) still have no effect. This document remains the design record
-> for the whole arc; §7 tracks which slice is done. It is intentionally
-> **not** indexed in `docs/README.md`.
+> phase two). As of Slice 3, **gate computation reads resolved packs** —
+> `effectiveGateSet` (`packages/core/src/gates/engine.ts`) now takes a
+> required `resolvedPacks` parameter and unions matching `gates[].add`
+> deltas into its output, at all 9 real call sites; `gatesFor` itself
+> remains untouched and pack-unaware — it stays the raw, packs-free (tier ×
+> profile) matrix builder, still free of any `packs/` import. A manifest's
+> `gates[]` shape is non-additive-rejected at parse time; only a
+> slash-command declaration (Slice 4) still has no effect. This document
+> remains the design record for the whole arc; §7 tracks which slice is
+> done. It is intentionally **not** indexed in `docs/README.md`.
 
 Scout: `scout-20260822-packs-design`. Precedes any implementation.
 
@@ -133,10 +136,10 @@ packs), and `config-explain/build.ts`'s per-tier matrix builder (same
 whole-matrix shape). Neither of those two exists to answer "what applies to
 my phase right now" — they exist to describe the tier×profile matrix
 itself, and both are correct to keep working from raw `gatesFor` for that
-purpose. `config-explain` does need a follow-up (§7 Slice 3) so that its
-*current-tier* row also reflects packs — otherwise `cadence config explain`
-would describe gates that don't match runtime reality — but the matrix
-table stays raw.
+purpose. `config-explain` needed a follow-up (§7 Slice 3, shipped phase
+292) so that its *current-tier* row also reflects packs — otherwise
+`cadence config explain` would describe gates that don't match runtime
+reality — but the matrix table stays raw.
 
 The actual "what applies to my phase" chokepoint already exists:
 `effectiveGateSet(state, config, draft)` (`engine.ts:233`), which resolves
@@ -342,7 +345,7 @@ requirement to the pack, not just the skill name. Doctor's unresolved-pack
 check (D-AR) escalates from warning to refusal for enabled-but-unresolvable
 packs, since behavioral consumption now exists.
 
-**Slice 3 — Gate-profile deltas.**
+**Slice 3 — Gate-profile deltas. Shipped (phase 292).**
 A pack's `gates[].add` unions into `effectiveGateSet`'s output (§4b), never
 into raw `gatesFor`. Manifest validation rejects any non-additive shape at
 parse time — not silently ignored, not silently dropped.

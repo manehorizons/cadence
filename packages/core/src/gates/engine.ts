@@ -8,6 +8,7 @@ import type {
   Profile,
   Tier,
 } from '@thomas-powers-jr/cadence-types';
+import type { ResolvedPack } from '../packs/resolve.js';
 import { resolveEffectiveProvider } from '../verify/verifier-factory.js';
 
 /**
@@ -226,16 +227,63 @@ export function gatesFor(tier: Tier, profile: Profile): GateSet {
 }
 
 /**
- * Convenience: derive the effective gate set from state + config + draft.
+ * Convenience: derive the effective gate set from state + config + draft + packs.
  * State carries the active tier; draft (optional) provides the profile
- * override; config provides the project default.
+ * override; config provides the project default; resolvedPacks (required, no
+ * default — every call site must be updated) contributes matched gates from
+ * pack manifests.
+ *
+ * Pack gates are merged additively: only successfully-resolved packs (with
+ * manifest, not error) contribute; their gates are filtered by matching
+ * (profile, tier) to the effective cell; and the union is merged into the
+ * output from gatesFor, deduped the same way gatesFor already dedups.
  */
 export function effectiveGateSet(
   state: Pick<CadenceState, 'tier'>,
   config: Pick<CadenceConfig, 'profile'> | null,
   draft: Pick<Draft, 'profile' | 'tier'> | null,
+  resolvedPacks: ResolvedPack[],
 ): GateSet {
   const tier: Tier = draft?.tier ?? state.tier ?? 'standard';
   const profile = effectiveProfile(config, draft);
-  return gatesFor(tier, profile);
+
+  // Start with gates from the base DELTAS table
+  const baseGateSet = gatesFor(tier, profile);
+
+  // Collect pack-contributed gates that match the active (profile, tier) cell
+  const packGates: Gate[] = [];
+  for (const pack of resolvedPacks) {
+    // Only process successfully-resolved packs (those with manifest, not error)
+    if ('manifest' in pack && pack.manifest.gates) {
+      for (const delta of pack.manifest.gates) {
+        // Only include gates where profile and tier match
+        if (delta.profile === profile && delta.tier === tier) {
+          packGates.push(...delta.add);
+        }
+      }
+    }
+  }
+
+  // Merge pack gates into the base gate set, deduped
+  const seen = new Set<Gate>();
+  const mergedGates: Gate[] = [];
+
+  // Add all base gates first (they're already deduped by gatesFor)
+  for (const g of baseGateSet.gates) {
+    seen.add(g);
+    mergedGates.push(g);
+  }
+
+  // Add pack gates, avoiding duplicates
+  for (const g of packGates) {
+    if (!seen.has(g)) {
+      seen.add(g);
+      mergedGates.push(g);
+    }
+  }
+
+  return {
+    gates: mergedGates,
+    softCap: baseGateSet.softCap,
+  };
 }

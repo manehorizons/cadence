@@ -48,12 +48,16 @@ import {
 import { effectiveEvidenceFloor, evidenceFloorRefusalReason } from '../gates/engine.js';
 import { runSkillAuditCheck } from '../checks/skill-audit.js';
 import { checkUnresolvablePacks } from '../checks/pack-resolution.js';
-// Phase 291 (Slice 2, T2): the ONE deliberate services/ -> packs/ import this
-// task introduces. `settle.ts` is the single asserted consumer — see
-// `packages/core/tests/gates/engine.test.ts`'s re-scoped structural test
-// (291-01/AC-3). Do not add a second `packs/` import anywhere else in
-// `services/`.
-import { resolvePacks } from '../packs/resolve.js';
+// Phase 291 (Slice 2, T2) introduced this as the ONE deliberate
+// services/ -> packs/ import. Phase 292 (Slice 3, T2) widened that bar to
+// exactly FOUR asserted services/ consumers — `settle.ts`,
+// `draft-approve.ts`, `draft-check.ts`, `build-task.ts` — because
+// `effectiveGateSet` now takes a required `resolvedPacks` argument and every
+// services/ call site needs a real one. The set is still closed and asserted:
+// see `packages/core/tests/gates/engine.test.ts`'s structural test
+// (291-01/AC-3, extended by 292-01/AC-1). Do not add a FIFTH `packs/` import
+// in `services/` without extending that test's expected list deliberately.
+import { resolvePacks, type ResolvedPack } from '../packs/resolve.js';
 import {
   addRecommendation,
   runAdvanceConvertedToSettlePendingForPhase,
@@ -521,17 +525,27 @@ type GateSetResolutionResult =
  * repo's Quiet Fallback convention (a loud stderr banner + recorded SUMMARY
  * provenance, settle still completes) rather than a new refuse-and-suggest
  * gate — see 244-01's Boundaries.
+ *
+ * Phase 292 (Slice 3, T2): `resolvedPacks` is threaded in by the caller
+ * rather than resolved here, so this function stays sync AND so settle
+ * performs exactly ONE pack resolution per run, shared with
+ * `runAnomalyAndSkillAuditChecks`'s skill-audit union (phase 291). This is a
+ * real-resolution site, not a `[]` one: a pack contributing to the active
+ * cell genuinely changes behavior here — adding `deep-verify`, for instance,
+ * flips `deepWillRun` below, which can newly (and correctly) print
+ * `MOCK_FALLBACK_BANNER`.
  */
 function resolveSettleGateSet(
   cwd: string,
   state: CadenceState,
   cadenceConfig: CadenceConfig,
   draft: Draft,
+  resolvedPacks: ResolvedPack[],
   opts: SettleArgs,
   io: CommandIO,
   argv1: string | undefined = process.argv[1],
 ): GateSetResolutionResult {
-  const gateSet = effectiveGateSet(state, cadenceConfig, draft);
+  const gateSet = effectiveGateSet(state, cadenceConfig, draft, resolvedPacks);
 
   // Phase 71: warn whenever the deep-verify gate will actually run in mock —
   // i.e. on the gate's real firing condition, not just explicit --deep. A
@@ -1074,6 +1088,7 @@ async function runAnomalyAndSkillAuditChecks(
   cwd: string,
   cadenceConfig: CadenceConfig,
   gateSet: ReturnType<typeof effectiveGateSet>,
+  resolvedPacks: ResolvedPack[],
   opts: SettleArgs,
   state: CadenceState,
   coverageBypassed: boolean,
@@ -1082,13 +1097,16 @@ async function runAnomalyAndSkillAuditChecks(
   verifierFailure: SettleAccumulator['flags']['verifierFailure'],
   io: CommandIO,
 ): Promise<AnomalyAndSkillAuditResult> {
-  // Phase 291 (Slice 2, T2): resolve packs once here so the skill-audit union
-  // (below) can fold in each successfully resolved pack's
-  // `manifest.skillAudit.required`. Null config reproduces pre-Slice-2
-  // behavior exactly (no packs resolved), matching `runSkillAuditCheck`'s own
-  // documented null-config contract.
-  const resolvedPacks = ctx.config ? await resolvePacks(cwd, ctx.config) : [];
-
+  // Phase 291 (Slice 2, T2) resolved packs here so the skill-audit union
+  // (below) could fold in each successfully resolved pack's
+  // `manifest.skillAudit.required`. Phase 292 (Slice 3, T2) hoisted that
+  // resolution up into `settleService` and threads the result in instead:
+  // `resolveSettleGateSet` needs the same data earlier in the same run, and
+  // one settle must not read every enabled pack's manifest twice. The
+  // hoisted call is equivalent — `settleService`'s `cadenceConfig` is always
+  // non-null (`loadConfig` returns `defaultConfig` when there is no
+  // `config.json`), so the former `ctx.config ? … : []` ternary could never
+  // take its `[]` branch from that call path.
   const anomalies = collectAnomalies({
     draft,
     progress,
@@ -1694,7 +1712,23 @@ export async function settleService(
     const collisionRefusal = await checkPhaseCollisionBackstop(cwd, activePhase, cadenceConfig, opts, io);
     if (collisionRefusal) return collisionRefusal;
 
-    const gateSetResult = resolveSettleGateSet(cwd, state, cadenceConfig, draft, opts, io);
+    // Phase 292 (Slice 3, T2): ONE pack resolution per settle run, hoisted
+    // above `resolveSettleGateSet` (which needs it for `effectiveGateSet`)
+    // and reused by `runAnomalyAndSkillAuditChecks` below (which needs it for
+    // phase 291's skill-audit union). Best-effort per the
+    // `config-explain/gather.ts` idiom: `resolvePacks` folds every
+    // read/parse/schema failure into a per-pack `{error}` entry instead of
+    // throwing, so this catch is unreachable defense-in-depth and the
+    // reachable honesty path is unchanged — `checkUnresolvablePacks` still
+    // surfaces every `{error}` pack loudly further down.
+    let resolvedPacks: ResolvedPack[] = [];
+    try {
+      resolvedPacks = await resolvePacks(cwd, cadenceConfig);
+    } catch {
+      resolvedPacks = [];
+    }
+
+    const gateSetResult = resolveSettleGateSet(cwd, state, cadenceConfig, draft, resolvedPacks, opts, io);
     if (!gateSetResult.ok) return gateSetResult.result;
     const { gateSet, verifierOverride, foreignBinaryMismatch } = gateSetResult;
 
@@ -1771,6 +1805,7 @@ export async function settleService(
       cwd,
       cadenceConfig,
       gateSet,
+      resolvedPacks,
       opts,
       state,
       coverageBypassed,

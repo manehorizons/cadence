@@ -2655,6 +2655,126 @@ script; caught a real CI-only bug during review (the test relied on ambient git
 identity, absent on CI runners) fixed with an explicit `GIT_AUTHOR_*`/`GIT_COMMITTER_*`
 env before merge. PR #396.
 
+### Phase 271 — Pre-release record integrity: roadmap/milestone currency (#397)
+
+**Objective.** Close the roadmap-currency doctor warning and the milestone-status
+desync so main's own planning records are honest before v1.56.0 cuts, per
+`docs/handoffs/HANDOFF-v1.56-release-closeout.md`'s Phase Q.
+
+**As built (2026-08-10).** Shipped as designed. PR #397.
+
+### Phase 272 — `assurance-record.ts` correctness pass (#399)
+
+**Objective.** Fix a raw NUL byte in `assurance-record.ts` that made the file
+grep-classify as binary, add a regression guard against recurrence, resolve the
+`deriveAssuranceRecord` weak-classification docstring/code mismatch, and record a
+decision on rec-20260808-007's deep-verify/per-task-verify provenance exclusion —
+an encoding and correctness pass, not a schema or behavior change.
+
+**As built (2026-08-11).** Shipped as designed. PR #399.
+
+### Phase 273 — Resume warns on dangling `lastHandoff` pointer (#403)
+
+**Objective.** `locateFreshestHandoff` silently fell back to a freshest-by-
+`generated_at` glob whenever `state.json`'s `session.lastHandoff` named a
+`SESSION-*.md` file that no longer existed, with zero signal to the caller that
+the pointer was dangling. Investigated rec-20260811-009's claim that the
+fallback picks lexicographically-last rather than most-recent and found it did
+not match the code — the real defect was the missing signal, not the ranking.
+Added a warning surfaced when resume serves a fallback doc instead of the
+pointer's actual target.
+
+**As built (2026-08-11).** Shipped with one scope amendment: AC-3 ("full test
+suite passes") was removed post-BUILD as an unencodable, command-output-shaped
+process claim — no test assertion can prove "the suite exits 0" without being
+either circular or a comment-only mention. PR #403.
+
+### Phase 274 — Unobservable-criteria classification for deep-verify honesty (#405)
+
+**Objective.** Added a settle-time classifier recognizing when an AC's
+satisfaction condition falls outside deep-verify's observable surface
+(`{acs, tests, diff, files}`) — most commonly because the AC's Then-clause makes
+`SUMMARY.md`/`SUMMARY.json` content itself the verification target, which is
+circular since that artifact does not exist until after the very settle that
+would check it. Wired into deep-verify's offender/refusal path and the
+force-used honesty report as a new `unobservable` verdict state (D-G,
+`dec-20260812-004`, superseding `dec-20260812-001`) that is reported but never
+rolls up as `pass` and never blocks settle on its own.
+
+**As built (2026-08-12).** Shipped across six independently-found amendments
+during build/review: a real coverage-scanner dedup bug that hid same-file,
+same-AC-token assertions from deep-verify (filed as `rec-20260812-004`), a
+too-narrow negation-detection span that risked a false `unobservable`
+verdict, and several DRAFT `files:`-line precision fixes needed for
+deep-verify's diff to actually see this phase's own new test files. PR #405.
+
+### Phase 275 — Deep-verify/per-task-verify provider provenance excluded from assurance rollup (#407)
+
+**Objective.** Closed rec-20260808-007's provenance gap (v1.57's Phase V):
+`deep-verify` and `per-task-verify` persisted no verifier-provider identity into
+`SummaryZ.gates[]` at all, unlike `code-review`/`security-audit`. Added a
+structurally separate `observedProvider`/`observedModel`/`taskId` field set to
+`GateProvenanceZ`, distinct from the existing `provider`/`model` fields, so
+per-task verifier identity is recorded without feeding into the assurance
+rollup.
+
+**As built (2026-08-13).** Shipped as designed. PR #407.
+
+### Phase 276 — Pre-phase-102 recommendation archive backfill (#418)
+
+**Objective.** Backfilled the pre-phase-102 recommendations that already
+carried terminal status into the archived bucket via the existing CLI (zero new
+code), and recorded the archiveReason-fidelity decision for the backfill.
+
+**As built (2026-08-13).** Archived 21 of the 22 candidates. The 22nd
+(`rec-20260701-001`) had `status: converted` but no `shippedRef` — it was
+never actually promoted to `shipped` after conversion, unlike the other 21,
+so it was correctly excluded from this backfill and left as-is. PR #418.
+
+### Phase 277 — `cadence doctor` check: recommendation-archive-currency (#419)
+
+**Objective.** Added a deterministic, warning-only `cadence doctor` check that
+no recommendation in the active ledger array carries a terminal
+`shipped`/`rejected` status without being archived — the invariant phase 276's
+backfill restored — following the `roadmap-currency`/`release-currency` house
+pattern.
+
+**As built (2026-08-13).** Shipped as designed, with AC-3's wording corrected
+during implementation (a missing `recommendations.json` legitimately falls
+through to the zero-offenders `ok` path, not `indeterminate`, matching
+`checkConductionDriftStreak`'s own precedent) and one regression test added
+by the whole-branch review before merge. PR #419.
+
+### Phase 278 — `cadence demo` + progressive-disclosure onboarding stages (#421)
+
+**Objective.** Shipped a non-interactive `cadence demo` refuse-then-succeed
+command reachable from a bare `npx` invocation, plus a minimal
+progressive-disclosure onboarding-stage system gating `cadence help`/`start`
+visibility, while keeping `cadence tutorial` working via a redirect notice.
+
+**As built (2026-08-14).** Shipped as designed. PR #421.
+
+### Phase 279 — Dispatch policy engine (#428)
+
+**Objective.** Gave `config.subagentPolicy` and `config.modelPerClass` — fully
+schema'd, defaulted, and live in `.cadence/config.json`, but with zero
+consumers anywhere in `packages/core/src` — their first reader: a pure
+classifier computing `{ execution, modelClass, model, reasons[] }` per task,
+threaded read-only/advisory through `cadence dispatch plan`'s JSON output and
+the dispatch packet.
+
+**As built (2026-08-14).** Shipped as designed. PR #428.
+
+### Phase 280 — Dispatch contract: record-time boundary/redundancy enforcement (#429)
+
+**Objective.** Made the dispatch contract enforceable at the moment a task
+outcome is recorded, closing rec-20260718-003/-004/-005: stop-conditions as a
+machine-readable DRAFT field, boundary+redundancy checks with a real block path
+at record time (not just settle), and side-channel documentation for the
+AskUserQuestion gap.
+
+**As built (2026-08-15).** Shipped as designed. PR #429.
+
 ### Phase 281 — Close the `cadence done` bypass hole (rec-20260815-002)
 
 **Objective.** `cadence done <id>` is documented as a shortcut for `cadence build
@@ -2668,6 +2788,147 @@ decision `dec-20260815-005` (D-N). The gap predates v1.60.0's dispatch-contract
 release (per-task-verify was already unguarded before phase 280; phase 280
 layered the boundary/redundancy gap on top) — v1.60.0 shipped before this fix
 landed, so the gap is present in a released version pending the next release.
+
+### Phase 282 — Coverage scanner dedup ordering + walk-order determinism (#435)
+
+**Objective.** Made the coverage scanner (`packages/core/src/verify/coverage.ts`)
+return the same answer for the same input every time, fixed the per-file dedup
+so a qualifying occurrence is never shadowed by an earlier non-qualifying one,
+and made `verify coverage --explain` agree with the gate it explains.
+
+**As built (2026-08-16).** Shipped as designed. Independent review later found
+two host-cli deep-verify verdicts (AC-2, AC-4) had come back `pass:false` and
+were `--force`-overridden; see phase 284's reconciliation. PR #435.
+
+### Phase 283 — Bypass-aware assurance grading (#437)
+
+**Objective.** A settle whose gates were bypassed, or whose real verifier
+failed ACs that `--force` overrode, must not be gradable as
+`assurance.overall: 'strong'` — `deriveAssuranceRecord` previously read
+`acResults` only, which by settle time already recorded `pass:true` for a
+`--force`-overridden AC, making a forced settle over real failures
+indistinguishable from a clean one (measured against phases 272 and 282, both
+of which had graded `'strong'` over recorded `gateBypasses` and real host-cli
+`deepVerify` failures).
+
+**As built (2026-08-16).** Shipped as designed. PR #437.
+
+### Phase 284 — Reconcile phase 282's AC-2/AC-4 verifier record (#444)
+
+**Objective.** Reconciled phase 282's historical record: two host-cli
+deep-verify verdicts (AC-2, AC-4) had come back `pass:false` and were
+overridden with `--force`, but 282's own As-built amendment blocks showed
+independent reviewers had already found and corrected both underlying issues
+in ways the verifier's judgement didn't reflect. Determined from the artifacts
+that both were substantively delivered, amended the record accordingly (never
+rewriting `282-01-SUMMARY.json` directly), and filed the systemic
+amendment-vs-verifier gap this revealed — a legitimately amended AC has no path
+back to deep-verify — as a recommendation.
+
+**As built (2026-08-20).** Shipped as designed. PR #444.
+
+### Phase 285 — `verify coverage --explain` no longer double-qualifies an already-qualified AC id (rec-20260816-001) (#450)
+
+**Objective.** Under `verification.coverageScheme: 'phase-qualified'`, passing
+an already-qualified `--explain` argument (e.g. `282-01/AC-4`) previously
+caused the active draft's qualifier to be prepended a second time, producing a
+search token that could never match, silently and at exit 0. Per D-X
+(`rec-20260816-001`), normalized an already-qualified argument to its bare form
+with a stderr notice, matching the existing Quiet Fallback precedent in the
+same function.
+
+**As built (2026-08-20).** Shipped as designed. Whole-branch review found the
+opposite-direction failure too: a naive unconditional strip down to an empty
+string produced a false SATISFIED at exit 0 via an empty-pattern match — worse
+than the bug this phase set out to fix. The shipped fix refuses that case
+outright rather than searching it. PR #450.
+
+### Phase 286 — Glob-expand boundary `files:` patterns (rec-20260815-005) (#453)
+
+**Objective.** A `files:` entry containing a wildcard must match the files it
+describes, in both `warn` and `block` mode. `runBoundaryCheck`
+(`packages/core/src/checks/boundary.ts`) compared `declaredFiles` to
+`touchedFiles` via exact `Set` membership — no glob library existed in
+`packages/core`'s dependencies — so a wildcard boundary entry was silently
+unmatchable. Added glob expansion to the boundary check.
+
+**As built (2026-08-21).** Shipped after four real (non-mock) deep-verify
+refusal rounds during settle, each closed by strengthening evidence rather
+than arguing with the verifier: real negative-case/broadened-snapshot tests,
+a byte-identity re-derivation via a scoped `git stash` round-trip to prove
+pre/post-change snapshots, an in-place AC-2 amendment from a
+procedure-shaped claim to an invariant-shaped one (`dec-20260821-002`,
+snapshot files replaced by explicit `toEqual()`), and a direct structural
+test for AC-5's zero-match isolation. Full suite re-verified clean after each
+round. PR #453.
+
+### Phase 287 — Assurance grade excludes empty-diff-only gates from earning strong (#457)
+
+**Objective.** Fixed `deriveAssuranceRecord` so a settle whose only non-mock
+verifier signal is `providerSelection: 'empty-diff'` — a provider call that
+structurally could not judge anything because its diff was empty — cannot earn
+`assurance.overall: 'strong'` alone, while a settle with a genuinely-configured
+non-mock gate present alongside an empty-diff one still can. Closed the gap
+between phase 263 (gates learned to tag empty-diff) and phase 283 (the grade
+learned to read bypasses) that
+`docs/handoffs/HANDOFF-verifier-honesty-verify-premises.md` identified.
+
+**As built (2026-08-21).** Shipped as designed. PR #457.
+
+### Phase 288 — Zero-AC drafts fail loud instead of passing every gate vacuously (#460)
+
+**Objective.** A DRAFT whose `## Acceptance Criteria` section is non-empty but
+yields zero parsed `### AC-N` blocks (e.g. a non-numeric heading like
+`### AC-K1:`) previously parsed silently to an empty AC array that
+structural-verifier, test-coverage, evidence-floor, and other gates all
+vacuously passed. Made that case fail loud instead.
+
+**As built (2026-08-21).** Shipped as designed. PR #460.
+
+### Phase 289 — Dispatch write authority: `CADENCE_READ_ONLY` structurally enforced at the store's write layer (rec-20260822-003, rec-20260822-004) (#463)
+
+**Objective.** A sub-agent instructed to be read-only must be structurally
+unable to mutate the intelligence ledger. Enforced a `CADENCE_READ_ONLY`
+env-gated refusal at the intelligence store's write entry points (D-AH), left
+the three read-only investigation commands (`context`, `recommend`, `inspect`)
+and `recommendation list`/`next` untouched (D-AI), documented the
+`settings.json` env-scoping mechanism's add/update-live-but-delete-sticky
+quirk (D-AJ), and updated the dispatch packet's prose to claim only what's
+actually enforced (D-AK).
+
+**As built (2026-08-22).** Shipped as designed. PR #463.
+
+### Phase 290 — Packs slice 1: manifest resolve and validate, zero behavioral effect (#467)
+
+**Objective.** Added a `PackManifest` schema, a `resolvePacks()` resolver, and
+a `cadence doctor` check reporting whether each enabled pack resolves — with
+zero behavioral effect on gate computation. Proves I-1/I-2/I-4a from
+`docs/packs-design.md` without touching `gatesFor`/`effectiveGateSet`'s output
+for any existing fixture.
+
+**As built (2026-08-22).** Shipped as designed. PR #467.
+
+### Phase 291 — Packs slice 2: `skillAudit.required` contribution with provenance (rec-20260822-010) (#468)
+
+**Objective.** Made a pack's `skillAudit.required` a real, behavioral
+contributor to `runSkillAuditCheck`'s `effectiveRequired` set, with
+per-requirement provenance (`config`/`draft`/`pack:<id>`) recorded in
+`SUMMARY.json` (D-AS). First slice where a resolved pack does anything — so
+`cadence doctor`'s `packs` check also escalated from warning to a hard
+settle-time refusal for an enabled-but-unresolvable pack, per
+`dec-20260822-025`'s two-phase D-AR plan reaching phase two.
+
+**As built (2026-08-22).** Shipped as designed. PR #468.
+
+### Phase 292 — Packs slice 3: tighten-only gate-profile deltas via `effectiveGateSet` (rec-20260822-011) *(in progress)*
+
+**Objective.** Make a pack's declared `gates[].add` deltas actually enforce:
+union pack-contributed gates into `effectiveGateSet()`'s output at every real
+call site (not just resolve them), reflect enabled packs' contribution in
+`cadence config explain`'s current-tier row while the tier×profile matrix
+table stays raw, and regression-test that a non-additive manifest shape is
+rejected at parse time — completing Packs Slice 3 per `docs/packs-design.md`
+§4b/§7 and rec-20260822-011.
 
 ### Phase 237 — Invariant promotion from recurring findings *(sketch — contingent)*
 

@@ -1314,22 +1314,6 @@ Phase 289's rec-20260822-006 was a real instance: a code-review finding at round
 
 289-01's real (non-mock) host-cli deep-verify ran 3 consecutive rounds during settle (289-01-CODE-REVIEW.json's separate code-review history shows the pattern; the deepVerify equivalent is not separately retained round-by-round). Rounds 1-2 caught two genuine, independently-confirmed gaps and were fixed; round 3, with zero AC-2/AC-3-relevant changes since round 1 where those ACs passed, gave a false refusal on both -- directly falsified by grepping the test files (rec-20260822-005: 5 289-01/AC-2 tests and 7 289-01/AC-3 tests exist, contradicting round 3's specific 'only 1 test cited' claims). Only round 3's verdict survives in 289-01-SUMMARY.json's persisted deepVerify block; rounds 1-2's verdicts exist only in human-written task-note prose (T2's PROGRESS.json note), not in any queryable artifact. A verifier that disagrees with itself across rounds is therefore invisible to anything but a human reading task notes -- cadence doctor, summary verify-all, and any future automated audit over SUMMARY.json corpora would see only the last round's (possibly wrong) verdict with no record that it contradicted an earlier passing round on unchanged evidence. Worth a decision: persist all convergence rounds' deepVerify verdicts (not just the final one) in SUMMARY.json, analogous to how 289-01-CODE-REVIEW.json's own 'history' array already retains per-round pass/findingsCount/verdict for code-review.
 
-## rec-20260822-011 — Packs Slice 3: tighten-only gate-profile deltas via effectiveGateSet(), config-explain stays honest
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core, gates, packs
-- files: packages/core/src/gates/engine.ts, packages/core/src/config-explain/build.ts
-- evidence: effectiveGateSet() (engine.ts:233) is the single existing chokepoint already used by all 9 real gatesFor-derived call sites (draft-check, draft-approve, build-task x2, settle, hooks/handlers x3, notify/loop-violation) -- verified by grep, not assumed.
-- next: cadence milestone propose
-
-A pack's gates[].add unions into effectiveGateSet()'s output (never raw gatesFor -- gatesFor stays pure/2-arg/untouched). Manifest validation refuses any non-additive shape at resolve time, not silently. cadence config explain's current-tier row (not the whole-matrix table) reflects enabled packs' contribution so the command that exists to answer 'what's actually enforced' stays accurate once packs are real. Depends on Slice 1/2. See docs/packs-design.md §4b/§7 Slice 3.
-
 ## rec-20260822-012 — Packs Slice 4 (stretch): declared-commands doctor check, non-enforced
 
 - status: candidate
@@ -1344,3 +1328,35 @@ A pack's gates[].add unions into effectiveGateSet()'s output (never raw gatesFor
 - next: cadence milestone propose
 
 A pack's commands[] (declared slash-command names) checked for presence by cadence doctor only -- never gate-enforced, matching D-AP's exclusion of commands from anything gate-shaped. May land after the rest of the packs arc closes; explicitly optional. See docs/packs-design.md §7 Slice 4.
+
+## rec-20260823-001 — doctor's assessGateReachability false-negatives on pack-added gates absent from a profile's raw matrix
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: doctor, packs
+- files: packages/core/src/doctor/run.ts
+- evidence: Phase 292 (292-01) whole-branch review, 2026-08-23: verified against live DELTAS table that security-audit/code-review are pack-reachable additions absent from raw gatesFor at every tier for their respective profiles.
+- next: cadence milestone propose
+
+assessGateReachability (doctor/run.ts:1632) scans only raw gatesFor(tier,profile) across all tiers to decide a gate is 'blocked by profile' -- deliberately pack-unaware per docs/packs-design.md §4b, since it answers a matrix-wide question independent of any phase's active packs. But phase 292 (Packs Slice 3) confirmed the divergence is concretely reachable, not theoretical: security-audit is absent from all three standard cells and all three auto cells in DELTAS; code-review is absent from all three auto cells. Both are ordinary Gate members a pack can add via gates[].add. A pack declaring e.g. {profile:'standard', tier:'complex', add:['security-audit']} makes doctor report that gate as blocked-by-profile even though effectiveGateSet (engine.ts) now genuinely fires it once that pack is enabled -- a false negative in the doctor's own honesty tooling. Fixing this is out of Slice 3's scope per its DRAFT Boundaries (doctor/run.ts must not change); filed per the dec-20260820-003 file-only precedent for exactly this kind of out-of-scope-but-real gap.
+
+## rec-20260823-002 — dispatch could refuse/warn when multiple mutating tasks target one shared worktree concurrently
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: dispatch, cadence-cli
+- files: packages/core/src/services/dispatch-plan.ts
+- evidence: Phase 292 (292-01) build, 2026-08-23: T4's entire diff (a new regression test) vanished from disk during wave-1 concurrent dispatch of T1/T3/T4/T5 into one shared worktree; T3 independently reported the same symptom (edits vanishing/reappearing) mid-task. Caught by independent on-disk re-verification, not by the subagent's own report.
+- next: cadence milestone propose
+
+Phase 292's wave-1 dispatch ran 4 mutating subagents (T1/T3/T4/T5) concurrently in ONE shared git worktree, against the dispatch plan's own recommendedIsolation:'worktree' guidance for tasks that mutate files. One task's entire diff (T4, a new test file) was silently lost mid-run -- confirmed via git diff showing zero change -- despite the implementer subagent reporting success with real (apparently genuine, pre-loss) test output. A second task (T3) independently observed its own edits vanish and reappear mid-task, consistent with the same root cause. Damage was caught only because the orchestrator independently re-verified every task's diff on disk rather than trusting subagent reports (per this repo's standing verification-before-completion discipline) -- a session that skipped that step would have silently shipped a phase missing one task's work while believing it complete. Root cause is presumed to be concurrent uncoordinated writes/git-adjacent operations across multiple Task-tool agents sharing one working directory, though the exact mechanism (a git operation from one agent clobbering another's uncommitted edit, a tool-layer race, or something else) was not root-caused -- only worked around by re-running the lost task solo. Candidate fixes: (1) cadence dispatch plan could set recommendedIsolation:'worktree' as a harder signal an orchestrator must not ignore for concurrent waves, or (2) an orchestrator-side guard/lint that refuses to knowingly dispatch >1 concurrent mutating agent into a single shared worktree without per-task isolation. This phase's own remediation was process-level (redo T4 solo, verify-on-disk before trusting reports) -- no code change was made for this finding.

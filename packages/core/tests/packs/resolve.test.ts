@@ -173,4 +173,42 @@ describe('resolvePacks — pack manifest resolution', () => {
       error: expect.any(String),
     });
   });
+
+  it('292-01/AC-4: non-additive gates[] delta shape (a valid "add" array PLUS an extra "remove" key) fails PackManifestZ validation on the extra key specifically → returns error result, never a truncated manifest', async () => {
+    active = await tempRepo({ initialized: true });
+    const packDir = join(active.root, '.cadence/packs/cadence/non-additive-gates');
+    await mkdir(packDir, { recursive: true });
+
+    // `gates[]` deltas are additive-only per PackGateDeltaZ (`{ profile, tier, add }`,
+    // `.strict()`) — a `remove` key here is a key outside that shape and must be
+    // rejected at parse time, not silently dropped down to a partial `add` list.
+    // The delta below includes a valid, present `add` array (required by
+    // PackGateDeltaZ) alongside the extra `remove` key, so validation can only
+    // fail because of `.strict()` rejecting the unrecognized key — not because
+    // `add` (a required field) is missing. Without a valid `add` present, this
+    // fixture would pass even if `.strict()` were weakened to `.passthrough()`,
+    // since the missing-required-field failure alone would still reject it.
+    const manifest = {
+      id: 'cadence/non-additive-gates',
+      version: '1.0.0',
+      gates: [
+        { profile: 'standard', tier: 'standard', add: ['code-review'], remove: ['test-coverage'] },
+      ],
+    };
+    await writeFile(join(packDir, 'pack.json'), JSON.stringify(manifest));
+
+    const config: Pick<CadenceConfig, 'packs'> = {
+      packs: { enabled: ['cadence/non-additive-gates'], disabled: [] },
+    };
+
+    const result = await resolvePacks(active.root, config);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({
+      id: 'cadence/non-additive-gates',
+      source: 'local',
+      error: expect.any(String),
+    });
+    expect(typeof (result[0] as { error: string }).error).toBe('string');
+    expect(result[0]).not.toHaveProperty('manifest');
+  });
 });
