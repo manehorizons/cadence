@@ -463,6 +463,19 @@ supervision. Pass `--allow-auto-complex` to override. The same gate set as
 The cap is implemented as `softCap: true` in the `GateSet` return value from
 `gatesFor('complex', 'auto')` in `engine.ts`.
 
+### Packs can widen the effective gate set (additive only)
+
+`gatesFor` (and the matrix above) is pure and pack-unaware — it never
+changes. An enabled [pack](reference/config.md#packs) can union additional
+gates onto its output via `effectiveGateSet`, tighten-only by construction:
+a pack's manifest has an `add` array and no `remove`/`override`/`set` key
+anywhere, so there is no way for a pack to loosen what a profile × tier cell
+already enforces. `cadence config explain`'s current-tier row reflects any
+enabled pack's contribution; the static matrix above never does. See
+`docs/packs-design.md` for the full design (packs are internal-first for
+now — CADENCE's own mechanism for distributing skills, commands, and gate
+deltas as one unit, not yet a public ecosystem).
+
 ---
 
 ## The gate universe

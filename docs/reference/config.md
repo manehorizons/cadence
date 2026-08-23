@@ -108,7 +108,7 @@ Extension pack management.
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `packs.enabled` | `string[]` | `[]` | Pack IDs to activate. Each id resolves against `.cadence/packs/<id>/pack.json`; a resolved pack's `skillAudit.required` unions into the [`skillAudit`](#skillaudit) check (Phase 291), and an enabled-but-unresolvable pack refuses `cadence settle run` (bypass: `--allow-unresolvable-pack`) and fails `cadence doctor`'s `packs` check. Gate-profile deltas (`gates[].add`) and slash-command declarations are not yet consumed — see `docs/packs-design.md`. |
+| `packs.enabled` | `string[]` | `[]` | Pack IDs to activate. Each id resolves against `.cadence/packs/<id>/pack.json`; a resolved pack's `skillAudit.required` unions into the [`skillAudit`](#skillaudit) check (Phase 291), and an enabled-but-unresolvable pack refuses `cadence settle run` (bypass: `--allow-unresolvable-pack`) and fails `cadence doctor`'s `packs` check. A pack's `gates[].add` unions into `effectiveGateSet`'s output, tighten-only (Phase 292); a pack's declared `commands[]` (slash-command names) are checked against the registered slash-command set by `cadence doctor`'s `pack-commands` check, doctor-checked only, never gate-enforced (Phase 293). See `docs/packs-design.md`. |
 | `packs.disabled` | `string[]` | `[]` | Pack IDs to suppress even if auto-discovered; wins over `packs.enabled` on collision. |
 
 ---
