@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DISPATCH_DIALOGUE, SCOUT_DIALOGUE } from '@thomas-powers-jr/cadence-types';
+import { COMMAND_GUIDANCE, DISPATCH_DIALOGUE, SCOUT_DIALOGUE } from '@thomas-powers-jr/cadence-types';
 import {
   mapEvent,
   extractPayload,
@@ -285,5 +285,20 @@ describe('COMMANDS slash-command catalog (AC-1)', () => {
       expect(spec.description.length).toBeGreaterThan(0);
       expect(spec.cli.length).toBeGreaterThan(0);
     }
+  });
+
+  // 293-01/AC-3: COMMAND_GUIDANCE's keys are the authority `cadence doctor`'s
+  // pack-commands check uses for "does this slash command actually exist."
+  // Both host-claude-code/src/install-commands.ts and
+  // host-codex/src/install-commands.ts iterate `COMMANDS` unconditionally
+  // (`for (const spec of COMMANDS)`, no filter beyond skipping an
+  // already-user-customized file on disk) — so COMMAND_GUIDANCE's keys must
+  // stay exactly equal to COMMANDS' names, or the doctor check would either
+  // falsely warn on a real command or silently pass a pack declaring one that
+  // was never installed.
+  it('293-01/AC-3: COMMAND_GUIDANCE keys exactly match the COMMANDS catalog names', () => {
+    const commandNames = COMMANDS.map((c) => c.name).sort();
+    const guidanceKeys = Object.keys(COMMAND_GUIDANCE).sort();
+    expect(commandNames).toEqual(guidanceKeys);
   });
 });
