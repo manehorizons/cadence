@@ -1,5 +1,6 @@
 import type { CadenceConfig, Gate, Profile, Tier } from '@thomas-powers-jr/cadence-types';
 import type { VerifierProvider } from '../verify/verifier-factory.js';
+import type { ResolvedPack } from '../packs/resolve.js';
 
 /**
  * External facts the pure {@link buildExplanation} needs but cannot observe
@@ -27,6 +28,19 @@ export interface ExplainContext {
    * it; a missing/`undefined` value is treated the same as `false`.
    */
   hostHooksStale?: boolean;
+  /**
+   * Resolved packs (phase 292, Slice 3), gathered impurely via `resolvePacks`
+   * by the CLI layer before `buildExplanation` runs, exactly the same
+   * pattern `hostHooksInstalled` etc. already use — the builder stays
+   * synchronous/offline and never calls `resolvePacks` itself. Only the
+   * successfully-resolved (`manifest`) variant contributes `gates[].add`
+   * deltas to the current-tier row; the `error` variant is ignored here,
+   * mirroring how `effectiveGateSet` (engine.ts) treats an unresolvable
+   * pack as contributing nothing rather than refusing. Optional so
+   * pre-existing `ExplainContext` literals (tests) keep compiling without
+   * it; a missing/`undefined` value behaves as "no packs enabled".
+   */
+  resolvedPacks?: ResolvedPack[];
 }
 
 /** The gates that fire for one tier under the configured profile. */
@@ -37,6 +51,17 @@ export interface TierGateView {
   softCap: boolean;
   /** True when this tier matches the active phase's tier. */
   current: boolean;
+  /**
+   * Gates present in `gates` because an enabled pack's `gates[].add`
+   * matched this row's (profile, tier) cell — not because of the raw
+   * tier×profile matrix (`gatesFor`). Phase 292 (Slice 3, §4b/§7): always
+   * empty for non-current rows (those stay raw `gatesFor` output
+   * unconditionally); empty for the current row too when no pack
+   * contributed anything at this cell. Non-optional — every `TierGateView`
+   * is builder-constructed, never hand-authored by a test as a bare
+   * literal the way `ExplainContext` is.
+   */
+  packContributedGates: Gate[];
 }
 
 /** One row of the collapsed provider table — which gate, which provider. */
@@ -50,7 +75,7 @@ export interface ProviderRow {
   isMock: boolean;
 }
 
-export type WarningCode = 'provider-no-key' | 'hooks-not-installed' | 'auto-complex-softcap' | 'all-mock';
+export type WarningCode = 'provider-no-key' | 'hooks-not-installed' | 'auto-complex-softcap' | 'all-mock' | 'packs-augment-current-tier';
 
 /** A config-semantic foot-gun: the config says X but the runtime effect is Y. */
 export interface Warning {

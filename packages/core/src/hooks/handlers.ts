@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { parseDraftMd } from '../parse/draft-parser.js';
 import { effectiveGateSet, effectiveBoundaryEnforcement, effectiveRedundantWorkEnforcement } from '../gates/engine.js';
+import { resolvePacks, type ResolvedPack } from '../packs/resolve.js';
 import { selectNotifier } from '../notify/factory.js';
 import { runBoundaryCheck } from '../checks/boundary.js';
 import { runRedundancyCheck, TERMINAL_TASK_STATUSES } from '../checks/task-redundancy.js';
@@ -51,6 +52,55 @@ function noticeIfAgentIdentificationUnsupported(ctx: HookContext, sourceEvent: s
   );
 }
 
+/**
+ * Phase 292 (Slice 3, T2) — per-invocation memoized pack resolution for this
+ * file's three `effectiveGateSet` call sites (`handlePreToolEdit` ×2,
+ * `handleSubagentResult` ×1).
+ *
+ * All three are REAL-resolution sites, not `[]` sites. Each one only probes
+ * the gate set for `anomaly-notify` membership, but `anomaly-notify` is
+ * precisely a gate a pack can contribute: `DELTAS` (`gates/engine.ts`) omits
+ * it from all three `strict` cells and from `standard × quick-fix`, so a pack
+ * adding it there is the difference between a boundary/redundancy anomaly
+ * reaching the configured notifier and being silently dropped. A narrow
+ * consumption shape is not a reason to skip resolution when the gate being
+ * probed is pack-reachable.
+ *
+ * The "hooks are a fast path, filesystem I/O is disproportionate" argument
+ * does not hold here either: every one of these sites already sits behind an
+ * `events.length > 0` guard (a boundary or redundancy violation was actually
+ * detected — rare), inside a handler that has already read `DRAFT.md` and, on
+ * two of the three paths, `PROGRESS.json`. One extra small read per *enabled*
+ * pack — zero when `packs.enabled` is empty, which is the default — is not
+ * the cost that matters on this path.
+ *
+ * Memoized so `handlePreToolEdit`'s two sites share one resolution per hook
+ * invocation. The `try`/`catch` lives here rather than at each call site: the
+ * handlers' own outer `catch` exists to keep a malformed DRAFT from breaking
+ * the hook, and letting a pack-resolution throw land there would silently
+ * skip the *rest* of the handler's work (the redundancy check) as a side
+ * effect. `resolvePacks` folds every read/parse/schema failure into a
+ * per-pack `{error}` entry rather than throwing, so this is unreachable
+ * defense-in-depth — it just keeps the blast radius at zero if that ever
+ * changes.
+ */
+function packResolver(
+  cwd: string,
+  config: Pick<CadenceConfig, 'packs'>,
+): () => Promise<ResolvedPack[]> {
+  let memo: ResolvedPack[] | undefined;
+  return async () => {
+    if (!memo) {
+      try {
+        memo = await resolvePacks(cwd, config);
+      } catch {
+        memo = [];
+      }
+    }
+    return memo;
+  };
+}
+
 export async function handleSessionStart(_ctx: HookContext, state: CadenceState): Promise<HookResult> {
   const lines = [
     'CADENCE session resumed.',
@@ -88,6 +138,10 @@ export async function handlePreToolEdit(
   if (state.activeDraft && state.activePhase) {
     const rawFiles = (ctx.raw as { files?: string[] } | undefined)?.files;
     if (rawFiles && rawFiles.length > 0) {
+      // Phase 292 (Slice 3, T2): one resolution shared by both
+      // `effectiveGateSet` call sites below — see `packResolver`'s doc
+      // comment for why these are real-resolution (not `[]`) sites.
+      const getResolvedPacks = packResolver(ctx.cwd, config);
       const draftPath = join(
         ctx.cwd,
         '.cadence/phases',
@@ -121,7 +175,7 @@ export async function handlePreToolEdit(
                 blockMessage: `boundaryEnforcement=block: file(s) not declared in any task's files: ${files.join(', ')}`,
               };
             }
-            const gateSet = effectiveGateSet(state, config, draft);
+            const gateSet = effectiveGateSet(state, config, draft, await getResolvedPacks());
             if (gateSet.gates.includes('anomaly-notify')) {
               const notifier = selectNotifier(config);
               try {
@@ -174,7 +228,7 @@ export async function handlePreToolEdit(
                   blockMessage: `redundantWorkEnforcement=block: ${String(first.context.file)} belongs to ${String(first.context.taskId)}, already ${String(first.context.status)} — mark it back to NEEDS_CONTEXT first (cadence build task ${String(first.context.taskId)} --status=NEEDS_CONTEXT), or confirm with the orchestrator.`,
                 };
               }
-              const gateSet = effectiveGateSet(state, config, draft);
+              const gateSet = effectiveGateSet(state, config, draft, await getResolvedPacks());
               if (gateSet.gates.includes('anomaly-notify')) {
                 const notifier = selectNotifier(config);
                 try {
@@ -312,7 +366,15 @@ export async function handleSubagentResult(
         blockMessage: `redundantWorkEnforcement=block: ${String(first.context.file)} belongs to ${String(first.context.taskId)}, already ${String(first.context.status)} — mark it back to NEEDS_CONTEXT first (cadence build task ${String(first.context.taskId)} --status=NEEDS_CONTEXT), or confirm with the orchestrator.`,
       };
     }
-    const gateSet = effectiveGateSet(state, config, draft);
+    // Phase 292 (Slice 3, T2): real pack resolution — see `packResolver`'s
+    // doc comment. Reached only when a redundancy violation was actually
+    // detected in `warn` mode, so this is not a per-edit cost.
+    const gateSet = effectiveGateSet(
+      state,
+      config,
+      draft,
+      await packResolver(ctx.cwd, config)(),
+    );
     if (gateSet.gates.includes('anomaly-notify')) {
       const notifier = selectNotifier(config);
       try {

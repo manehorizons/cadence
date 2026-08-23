@@ -2354,37 +2354,6 @@
       "updatedAt": "2026-08-22T20:17:28.781Z"
     },
     {
-      "id": "rec-20260822-011",
-      "title": "Packs Slice 3: tighten-only gate-profile deltas via effectiveGateSet(), config-explain stays honest",
-      "summary": "A pack's gates[].add unions into effectiveGateSet()'s output (never raw gatesFor -- gatesFor stays pure/2-arg/untouched). Manifest validation refuses any non-additive shape at resolve time, not silently. cadence config explain's current-tier row (not the whole-matrix table) reflects enabled packs' contribution so the command that exists to answer 'what's actually enforced' stays accurate once packs are real. Depends on Slice 1/2. See docs/packs-design.md §4b/§7 Slice 3.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core",
-        "gates",
-        "packs"
-      ],
-      "affectedFiles": [
-        "packages/core/src/gates/engine.ts",
-        "packages/core/src/config-explain/build.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260822-020"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260822-packs-design",
-      "createdAt": "2026-08-22T21:25:18.852Z",
-      "updatedAt": "2026-08-22T21:25:18.852Z"
-    },
-    {
       "id": "rec-20260822-012",
       "title": "Packs Slice 4 (stretch): declared-commands doctor check, non-enforced",
       "summary": "A pack's commands[] (declared slash-command names) checked for presence by cadence doctor only -- never gate-enforced, matching D-AP's exclusion of commands from anything gate-shaped. May land after the rest of the packs arc closes; explicitly optional. See docs/packs-design.md §7 Slice 4.",
@@ -2411,6 +2380,34 @@
       "scoutId": "scout-20260822-packs-design",
       "createdAt": "2026-08-22T21:25:19.027Z",
       "updatedAt": "2026-08-22T21:25:19.027Z"
+    },
+    {
+      "id": "rec-20260823-001",
+      "title": "doctor's assessGateReachability false-negatives on pack-added gates absent from a profile's raw matrix",
+      "summary": "assessGateReachability (doctor/run.ts:1632) scans only raw gatesFor(tier,profile) across all tiers to decide a gate is 'blocked by profile' -- deliberately pack-unaware per docs/packs-design.md §4b, since it answers a matrix-wide question independent of any phase's active packs. But phase 292 (Packs Slice 3) confirmed the divergence is concretely reachable, not theoretical: security-audit is absent from all three standard cells and all three auto cells in DELTAS; code-review is absent from all three auto cells. Both are ordinary Gate members a pack can add via gates[].add. A pack declaring e.g. {profile:'standard', tier:'complex', add:['security-audit']} makes doctor report that gate as blocked-by-profile even though effectiveGateSet (engine.ts) now genuinely fires it once that pack is enabled -- a false negative in the doctor's own honesty tooling. Fixing this is out of Slice 3's scope per its DRAFT Boundaries (doctor/run.ts must not change); filed per the dec-20260820-003 file-only precedent for exactly this kind of out-of-scope-but-real gap.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "doctor",
+        "packs"
+      ],
+      "affectedFiles": [
+        "packages/core/src/doctor/run.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260823-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-23T04:41:09.641Z",
+      "updatedAt": "2026-08-23T04:41:09.641Z"
     }
   ],
   "archived": [
@@ -9016,11 +9013,46 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "291-packs-slice-2-skillaudit-provenance",
-      "scoutId": "scout-20260822-packs-design",
-      "createdAt": "2026-08-22T21:25:18.686Z",
-      "updatedAt": "2026-08-23T02:01:29.897Z",
       "shippedRef": "phase 291-01",
+      "scoutId": "scout-20260822-packs-design",
       "archivedAt": "2026-08-23T02:01:29.897Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-22T21:25:18.686Z",
+      "updatedAt": "2026-08-23T02:01:29.897Z"
+    },
+    {
+      "id": "rec-20260822-011",
+      "title": "Packs Slice 3: tighten-only gate-profile deltas via effectiveGateSet(), config-explain stays honest",
+      "summary": "A pack's gates[].add unions into effectiveGateSet()'s output (never raw gatesFor -- gatesFor stays pure/2-arg/untouched). Manifest validation refuses any non-additive shape at resolve time, not silently. cadence config explain's current-tier row (not the whole-matrix table) reflects enabled packs' contribution so the command that exists to answer 'what's actually enforced' stays accurate once packs are real. Depends on Slice 1/2. See docs/packs-design.md §4b/§7 Slice 3.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "gates",
+        "packs"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/engine.ts",
+        "packages/core/src/config-explain/build.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260822-020"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "292-packs-slice-3-tighten-only-gate-profile-deltas-via-effectivegateset",
+      "scoutId": "scout-20260822-packs-design",
+      "createdAt": "2026-08-22T21:25:18.852Z",
+      "updatedAt": "2026-08-23T04:56:38.380Z",
+      "shippedRef": "292-packs-slice-3-tighten-only-gate-profile-deltas-via-effectivegateset",
+      "archivedAt": "2026-08-23T04:56:38.380Z",
       "archiveReason": "shipped"
     }
   ]

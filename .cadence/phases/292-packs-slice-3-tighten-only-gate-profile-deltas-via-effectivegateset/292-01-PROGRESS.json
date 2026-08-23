@@ -1,0 +1,69 @@
+{
+  "draftId": "292-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Threaded required resolvedPacks param through effectiveGateSet; unions matching gates[].add. Independent review found real dedup/errored-pack test gaps (mutation-tested); fix round added falsifiable dedup test + mixed valid/errored coverage. Whole-branch review also surfaced stale docs/packs-design.md status text and a missing changeset -- both remediated and attached to T1 per this DRAFT's files: amendment. Re-verified: 45/45 tests, typecheck shows exactly the 9 expected downstream errors.",
+      "touchedFiles": [
+        "docs/packs-design.md",
+        "packages/core/src/cli/commands/config.ts",
+        "packages/core/src/config-explain/build.ts",
+        "packages/core/src/config-explain/gather.ts",
+        "packages/core/src/config-explain/types.ts",
+        "packages/core/src/gates/engine.ts",
+        "packages/core/src/hooks/handlers.ts",
+        "packages/core/src/notify/loop-violation.ts",
+        "packages/core/src/services/build-task.ts",
+        "packages/core/src/services/draft-approve.ts",
+        "packages/core/src/services/draft-check.ts",
+        "packages/core/src/services/settle.ts",
+        "packages/core/tests/config-explain/build.test.ts",
+        "packages/core/tests/config-explain/gather.test.ts",
+        "packages/core/tests/gates/engine.test.ts",
+        "packages/core/tests/packs/resolve.test.ts",
+        ".changeset/packs-slice-3-gate-profile-deltas.md",
+        "packages/core/tests/services/draft-approve-packs.test.ts"
+      ],
+      "updatedAt": "2026-08-23T04:52:34.649Z",
+      "execution": "dispatch",
+      "isolation": "none",
+      "modelClass": "mechanical"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Extended ExplainContext with resolvedPacks; buildExplanation unions matching gates[].add into only the current-tier row, matrix stays raw; new packs-augment-current-tier warning surfaces the divergence, correctly guarded against false-positive on gate redeclaration. Independent review: READY, no findings. Whole-branch review's AC-3 concern (two-renderings assumption) resolved via As-built amendment, not a code change. Re-verified: 49/49 config-explain tests, typecheck clean in scope.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-23T04:52:40.926Z",
+      "execution": "dispatch",
+      "isolation": "none",
+      "modelClass": "standard"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Regression test confirming PackGateDeltaZ's .strict() rejects a non-additive gates[] delta at parse time. First attempt was lost to concurrent multi-agent worktree corruption (redone solo, confirmed persisted). Whole-branch review found the fixture didn't discriminate .strict() specifically (missing required add field masked the real signal); fixed to add:[...],remove:[...] so the extra key is the sole failure cause. Re-verified: 8/8 tests.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-23T04:52:46.634Z",
+      "execution": "dispatch",
+      "isolation": "none",
+      "modelClass": "mechanical"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Updated all 9 effectiveGateSet call sites: 8 real resolutions (memoized where a function has multiple sites, hoisted once per settle run and reused for phase 291's skill-audit union), 1 forced explicit [] (loop-violation.ts's null-config branch -- AC-2's genuine case). Also fixed a cross-task structural-coupling assertion in engine.test.ts that T2's own work invalidated (tightened, not loosened, to the exact new 4-file services/ + 1-file gates/ consumer set). Whole-branch review confirmed AC-2 reasoning correct against live DELTAS table. Re-verified: typecheck clean, full suite 451/451 files 4435/4435 tests.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-23T04:52:55.163Z",
+      "execution": "dispatch",
+      "isolation": "none",
+      "modelClass": "complex"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Investigated doctor's assessGateReachability divergence. Initial investigation (mid-build) concluded not reachable; whole-branch review found this wrong against the FINAL diff -- security-audit/code-review are genuinely pack-addable and absent from all tiers of their respective profiles in the raw matrix. Filed rec-20260823-001 documenting the false-negative, matching the dec-20260820-003 file-only precedent (doctor/run.ts untouched, out of this phase's scope per Boundaries).",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-23T04:53:01.730Z",
+      "execution": "dispatch",
+      "isolation": "none",
+      "modelClass": "mechanical"
+    }
+  }
+}

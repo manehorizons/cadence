@@ -6,6 +6,7 @@ import { parseDraftMd } from '../parse/draft-parser.js';
 import { SimpleStateBackend } from '../state/simple.js';
 import { loadConfig } from '../config/loader.js';
 import { effectiveGateSet } from '../gates/engine.js';
+import { resolvePacks, type ResolvedPack } from '../packs/resolve.js';
 import { buildDraftContext } from '../gates/draft-context.js';
 import type { DraftGateContext } from '../gates/draft-types.js';
 import { runCoherenceGate, emitCoherenceWarns } from '../gates/coherence.js';
@@ -63,7 +64,26 @@ export async function draftApproveService(
     const projectMdPath = join(repoRoot, '.cadence', 'PROJECT.md');
     const projectMd = existsSync(projectMdPath) ? await readFile(projectMdPath, 'utf8') : '';
     const cfg = await loadConfig(repoRoot);
-    const gateSet = effectiveGateSet(state, cfg, draft);
+    // Phase 292 (Slice 3, T2) — REAL pack resolution. This gate set is a
+    // command-boundary enforcement decision, not a narrow membership probe:
+    // it drives the coherence gate, the auto×complex soft cap, the manual
+    // approve gate, and the plan-review gate. A pack that adds `approve` or
+    // `plan-review` to the active cell must actually tighten this checkpoint,
+    // so `[]` here would silently no-op the pack's whole reason for existing.
+    // Best-effort per the `config-explain/gather.ts` idiom: `resolvePacks`
+    // already folds every read/parse/schema failure into a per-pack `{error}`
+    // entry rather than throwing, so this catch is unreachable
+    // defense-in-depth — it exists only so an unforeseen throw can never take
+    // `draft approve` down. Unresolvable packs stay visible where the
+    // operator already looks for them (`cadence doctor`, settle's
+    // unresolvable-packs check).
+    let resolvedPacks: ResolvedPack[] = [];
+    try {
+      resolvedPacks = await resolvePacks(repoRoot, cfg);
+    } catch {
+      resolvedPacks = [];
+    }
+    const gateSet = effectiveGateSet(state, cfg, draft, resolvedPacks);
     const ctx = buildDraftContext({
       cwd: repoRoot, state, draft, config: cfg, gateSet, phase, id, projectMd,
       opts: {

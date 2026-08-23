@@ -2361,6 +2361,13 @@
       "kind": "note",
       "summary": "CMD-E measured 13 slash commands in .claude/commands/ as one of the four enforcement-primitive surfaces packs would compose; commands are declarative/doctor-checked only per D-AP.",
       "createdAt": "2026-08-22T21:25:19.027Z"
+    },
+    {
+      "id": "ev-20260823-001",
+      "recommendationId": "rec-20260823-001",
+      "kind": "note",
+      "summary": "Phase 292 (292-01) whole-branch review, 2026-08-23: verified against live DELTAS table that security-audit/code-review are pack-reachable additions absent from raw gatesFor at every tier for their respective profiles.",
+      "createdAt": "2026-08-23T04:41:09.641Z"
     }
   ]
 }

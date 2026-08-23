@@ -33,7 +33,7 @@ export async function runConfigExplain(
     throw new NotInitializedError();
   }
   const config = await loadConfig(root);
-  const ctx = await gatherExplainContext(root);
+  const ctx = await gatherExplainContext(root, config);
   const exp = buildExplanation(config, ctx);
 
   if (args.json === true) {
@@ -112,7 +112,7 @@ export async function runConfigEdit(
 
   await writeConfig(root, result.config);
   io.out(`\n✓ wrote .cadence/config.json\n\nWhat changed for you:\n\n`);
-  const ctx = await gatherExplainContext(root);
+  const ctx = await gatherExplainContext(root, result.config);
   io.out(renderText(buildExplanation(result.config, ctx), {}));
   return { exitCode: 0, data: { changed: true, changes: result.changes } };
 }

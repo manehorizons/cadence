@@ -1041,12 +1041,83 @@ changeset (example/test-only change, no published-package surface).*
   regression (bare AC tokens vs. phase-239's phase-qualified default), which had silently
   broken the demo's documented "Settled" end state since phase 239 (rec-20260810-001,
   #396).
+- **Phase 271** — backfilled ROADMAP.md/MILESTONES.md phase currency and closed the
+  roadmap-currency doctor warning ahead of v1.56.0, per
+  `HANDOFF-v1.56-release-closeout.md`'s Phase Q (#397).
+- **Phase 272** — fixed a raw NUL byte that made `assurance-record.ts` grep-classify
+  as binary, added a regression guard, corrected the `deriveAssuranceRecord`
+  weak-classification docstring/code mismatch, and recorded a decision on
+  rec-20260808-007's provenance exclusion (#399).
+- **Phase 273** — `cadence resume` now warns when `state.json`'s
+  `session.lastHandoff` pointer is dangling and a fallback doc is served instead,
+  closing the missing-signal gap investigated via rec-20260811-009 (#403).
+- **Phase 274** — added a settle-time `unobservable` verdict state for ACs whose
+  satisfaction condition falls outside deep-verify's observable surface (most
+  commonly a circular SUMMARY self-reference), reported but never rolled up as
+  pass and never blocking settle alone (dec-20260812-004, #405).
+- **Phase 275** — `deep-verify`/`per-task-verify` now persist verifier-provider
+  identity (`observedProvider`/`observedModel`/`taskId`) into `GateProvenanceZ`,
+  closing rec-20260808-007's provenance gap without feeding into the assurance
+  rollup (#407).
+- **Phase 276** — backfilled pre-phase-102 recommendations already carrying
+  terminal status into the archived bucket via the existing CLI, zero new code
+  (#418).
+- **Phase 277** — added `cadence doctor`'s `recommendation-archive-currency`
+  check, a warning-only signal that no ledger recommendation carries terminal
+  status without being archived (#419).
+- **Phase 278** — shipped a non-interactive `cadence demo` command reachable from
+  a bare `npx` invocation plus a progressive-disclosure onboarding-stage system
+  gating `cadence help`/`start` visibility, keeping `cadence tutorial` working via
+  a redirect (#421).
+- **Phase 279** — gave `config.subagentPolicy`/`config.modelPerClass` their first
+  reader: a pure classifier surfaced read-only/advisory through
+  `cadence dispatch plan`'s JSON output and the dispatch packet (#428).
+- **Phase 280** — made the dispatch contract enforceable at record time:
+  machine-readable stop-conditions and a real boundary+redundancy block path
+  (not just at settle), closing rec-20260718-003/-004/-005 (#429).
 - **Phase 281** — `cadence done <id>` routed through `buildTaskService` to close a
   documented-but-unenforced shortcut: it bypassed the per-task-verify gate, phase 280's
   record-time boundary/redundancy check, and the pre-existing unknown-task-id guard
   (Phase 29.8, carried into `buildTaskService` by phase 58's MCP-surface extraction).
   Now a true alias for `build task <id> --status=DONE` with identical guarantees
   (rec-20260815-002, dec-20260815-005).
+- **Phase 282** — fixed the coverage scanner's dedup ordering and walk-order
+  non-determinism so `verify coverage --explain` agrees with the gate it explains
+  (#435).
+- **Phase 283** — `deriveAssuranceRecord` now reads gate bypasses and
+  `--force`-overridden verifier failures, so a bypassed or forced settle can no
+  longer grade `assurance.overall: 'strong'` (#437).
+- **Phase 284** — reconciled phase 282's AC-2/AC-4 host-cli deep-verify `--force`
+  overrides against independent-reviewer evidence, amended the record without
+  rewriting `282-01-SUMMARY.json`, and filed the amendment-vs-verifier gap as a
+  recommendation (#444).
+- **Phase 285** — fixed `verify coverage --explain` double-qualifying an
+  already-qualified AC id into an unmatchable token; also caught and fixed the
+  opposite-direction empty-string false-SATISFIED failure during review
+  (rec-20260816-001, #450).
+- **Phase 286** — `runBoundaryCheck` now glob-expands `files:` wildcard patterns
+  instead of comparing via exact `Set` membership, in both warn and block mode
+  (rec-20260815-005, #453).
+- **Phase 287** — `deriveAssuranceRecord` no longer lets a settle whose only
+  non-mock signal is `providerSelection: 'empty-diff'` earn
+  `assurance.overall: 'strong'` alone (#457).
+- **Phase 288** — a DRAFT whose Acceptance Criteria section yields zero parsed
+  `### AC-N` blocks now fails loud instead of silently passing every gate
+  vacuously (#460).
+- **Phase 289** — `CADENCE_READ_ONLY` is now structurally enforced at the
+  intelligence store's write entry points, leaving read-only investigation
+  commands untouched (rec-20260822-003, rec-20260822-004, #463).
+- **Phase 290** — Packs slice 1: added a `PackManifest` schema, `resolvePacks()`,
+  and a `cadence doctor` pack-resolution check, with zero behavioral effect on
+  gate computation (#467).
+- **Phase 291** — Packs slice 2: a pack's `skillAudit.required` became a real
+  behavioral contributor to `runSkillAuditCheck`'s effective-required set with
+  per-requirement provenance, and unresolvable enabled packs now hard-refuse at
+  settle (rec-20260822-010, #468).
+- **Phase 292** — Packs slice 3 (in progress): union pack-contributed
+  `gates[].add` deltas into `effectiveGateSet()`'s output at every real call
+  site, reflect enabled packs in `cadence config explain`'s current-tier row, and
+  reject non-additive manifest shapes at parse time (rec-20260822-011).
 
 
 

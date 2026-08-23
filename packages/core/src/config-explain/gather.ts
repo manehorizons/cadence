@@ -1,9 +1,10 @@
-import type { Tier } from '@thomas-powers-jr/cadence-types';
+import type { CadenceConfig, Tier } from '@thomas-powers-jr/cadence-types';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { SimpleStateBackend } from '../state/simple.js';
 import { hasManagedCadence, hasStaleScopeManagedHook } from '../doctor/host-hooks.js';
+import { resolvePacks } from '../packs/resolve.js';
 import type { ExplainContext } from './types.js';
 
 /**
@@ -28,14 +29,22 @@ async function readHostHookState(root: string): Promise<{ installed: boolean; st
 
 /**
  * Gather the impure facts {@link buildExplanation} needs: the active phase tier
- * (from `state.json`), the provider-key env vars, and host-install state. Pure
- * functions stay pure — this is the one place that touches the filesystem and
- * `process.env`. Best-effort throughout: any read failure degrades to a safe
- * default rather than throwing, so `config explain` never dies on a half-set-up
- * repo. `env` is injectable for testing.
+ * (from `state.json`), the provider-key env vars, host-install state, and
+ * (phase 292, Slice 3) resolved packs. Pure functions stay pure — this is the
+ * one place that touches the filesystem and `process.env`. Best-effort
+ * throughout: any read failure degrades to a safe default rather than
+ * throwing, so `config explain` never dies on a half-set-up repo. `env` is
+ * injectable for testing.
+ *
+ * `config` is the already-loaded config (both CLI call sites in
+ * `cli/commands/config.ts` call `loadConfig` before this) — passed in rather
+ * than re-loaded here so this stays a single read, and so `resolvePacks`
+ * (`../packs/resolve.js`) sees the exact same `config.packs` the rest of the
+ * command run is using.
  */
 export async function gatherExplainContext(
   root: string,
+  config: Pick<CadenceConfig, 'packs'>,
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<ExplainContext> {
   let activeTier: Tier | null = null;
@@ -48,11 +57,19 @@ export async function gatherExplainContext(
 
   const hostHooks = await readHostHookState(root);
 
+  let resolvedPacks: ExplainContext['resolvedPacks'] = [];
+  try {
+    resolvedPacks = await resolvePacks(root, config);
+  } catch {
+    resolvedPacks = [];
+  }
+
   return {
     activeTier,
     anthropicKeyPresent: Boolean(env.ANTHROPIC_API_KEY),
     localKeyPresent: Boolean(env.CADENCE_LOCAL_API_KEY),
     hostHooksInstalled: hostHooks.installed,
     hostHooksStale: hostHooks.stale,
+    resolvedPacks,
   };
 }
