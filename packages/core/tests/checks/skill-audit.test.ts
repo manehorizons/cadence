@@ -1,8 +1,32 @@
 import { describe, it, expect } from 'vitest';
 import { runSkillAuditCheck } from '../../src/checks/skill-audit.js';
 import type { SettleContext } from '../../src/gates/types.js';
+import type { ResolvedPack } from '../../src/packs/resolve.js';
+import type { CadenceState } from '@thomas-powers-jr/cadence-types';
 
 type EmitArg = Parameters<SettleContext['emit']['skillAuditMiss']>[0];
+
+/**
+ * Phase 291 (Slice 2) fixtures. `resolvedPacks` is deliberately NOT a field on
+ * the `ctx()` context factory below: the DRAFT's Boundaries forbid any
+ * `packs/`-typed field on `SettleContext`, and `ctx()`'s
+ * `as unknown as SettleContext` cast would silently swallow an extra property,
+ * leaving these tests exercising a shape settle never produces. They are a
+ * second argument instead, exactly as T2 will pass them.
+ */
+const pack = (id: string, required: string[]): ResolvedPack => ({
+  id,
+  source: 'local',
+  manifest: { id, version: '1.0.0', skillAudit: { required } },
+});
+
+/** An enabled-but-unresolvable pack — the `{ id, source, error }` arm. It must
+ *  contribute nothing to either array here; refusing over it is T3's check. */
+const brokenPack = (id: string): ResolvedPack => ({
+  id,
+  source: 'local',
+  error: `Failed to read pack manifest for ${id}`,
+});
 
 function ctx(over: {
   configRequired?: string[] | null; // null → config is null (load failed)
@@ -133,5 +157,143 @@ describe('runSkillAuditCheck', () => {
     );
     expect(res.outcome).toBe('pass');
     expect([...res.effectiveRequired].sort()).toEqual(['a', 'b']);
+  });
+});
+
+describe('runSkillAuditCheck · resolved packs contribute required skills (phase 291 T1)', () => {
+  it('291-01/AC-1: a pack-declared required skill unions in and enforces exactly like a config-declared one', async () => {
+    // Union: the pack's skill joins config's and the DRAFT's, in source order.
+    const unioned = await runSkillAuditCheck(
+      ctx({ configRequired: ['a'], draftRequired: ['b'], invoked: ['x:a', 'x:b', 'x:c'] }),
+      [pack('cadence/x', ['c'])],
+    );
+    expect(unioned.outcome).toBe('pass');
+    expect(unioned.effectiveRequired).toEqual(['a', 'b', 'c']);
+
+    // Enforcement: a pack-only requirement that was never invoked refuses,
+    // with the same error-severity anomaly and refusal stderr a config-declared
+    // miss produces — and `requiredWithProvenance` survives the refuse path.
+    const emits: EmitArg[] = [];
+    const errs: string[] = [];
+    const refused = await runSkillAuditCheck(ctx({ invoked: [], emits, errs }), [
+      pack('cadence/x', ['tdd']),
+    ]);
+    expect(refused.outcome).toBe('refuse');
+    expect(refused.effectiveRequired).toEqual(['tdd']);
+    expect(refused.requiredWithProvenance).toEqual([
+      { skill: 'tdd', source: 'pack:cadence/x' },
+    ]);
+    expect(emits[0]).toMatchObject({ severity: 'error', missing: ['tdd'] });
+    expect(errs.join('')).toContain('required skill(s) not invoked: tdd');
+
+    // Same `--allow-skill-audit-miss` bypass.
+    const bypassEmits: EmitArg[] = [];
+    const bypassErrs: string[] = [];
+    const bypassed = await runSkillAuditCheck(
+      ctx({ invoked: [], allowSkillAuditMiss: true, emits: bypassEmits, errs: bypassErrs }),
+      [pack('cadence/x', ['tdd'])],
+    );
+    expect(bypassed.outcome).toBe('pass');
+    expect(bypassEmits[0]).toMatchObject({ severity: 'warn', bypassed: true, missing: ['tdd'] });
+    expect(bypassErrs.join('')).toContain('--allow-skill-audit-miss set');
+
+    // Same telemetry-off degradation: unenforceable warn, never a refusal.
+    const offEmits: EmitArg[] = [];
+    const telemetryOff = await runSkillAuditCheck(
+      ctx({ invoked: [], skillInvocations: false, emits: offEmits }),
+      [pack('cadence/x', ['tdd'])],
+    );
+    expect(telemetryOff.outcome).toBe('pass');
+    expect(offEmits[0]).toMatchObject({ severity: 'warn', unenforceable: true, missing: ['tdd'] });
+
+    // An unresolvable pack contributes nothing — no phantom requirement, no
+    // refusal from this check (T3 owns refusing over the resolution failure).
+    const brokenEmits: EmitArg[] = [];
+    const broken = await runSkillAuditCheck(ctx({ invoked: [], emits: brokenEmits }), [
+      brokenPack('cadence/missing'),
+    ]);
+    expect(broken.outcome).toBe('pass');
+    expect(broken.effectiveRequired).toEqual([]);
+    expect(broken.requiredWithProvenance).toEqual([]);
+    expect(brokenEmits).toEqual([]);
+  });
+
+  it('291-01/AC-2: a skill required by both config and a pack yields two provenance entries, never one collapsed row', async () => {
+    const res = await runSkillAuditCheck(
+      ctx({ configRequired: ['foo'], draftRequired: ['bar'], invoked: ['x:foo', 'x:bar'] }),
+      [pack('cadence/x', ['foo'])],
+    );
+    expect(res.outcome).toBe('pass');
+
+    // The enforcement-facing array IS deduped — `foo` enforces once.
+    expect(res.effectiveRequired).toEqual(['foo', 'bar']);
+
+    // Provenance is NOT deduped across sources: `foo` is demanded twice, so it
+    // appears twice, each row naming who demanded it. Order is config → draft
+    // → packs in resolution order.
+    expect(res.requiredWithProvenance).toEqual([
+      { skill: 'foo', source: 'config' },
+      { skill: 'bar', source: 'draft' },
+      { skill: 'foo', source: 'pack:cadence/x' },
+    ]);
+
+    // Two packs both demanding the same skill stay distinguishable too.
+    const twoPacks = await runSkillAuditCheck(ctx({ invoked: ['x:foo'] }), [
+      pack('cadence/x', ['foo']),
+      pack('cadence/y', ['foo']),
+    ]);
+    expect(twoPacks.effectiveRequired).toEqual(['foo']);
+    expect(twoPacks.requiredWithProvenance).toEqual([
+      { skill: 'foo', source: 'pack:cadence/x' },
+      { skill: 'foo', source: 'pack:cadence/y' },
+    ]);
+  });
+
+  it('behaves identically to the pre-Slice-2 code path when no packs resolve', async () => {
+    // Default argument (what settle.ts's untouched one-arg call site still
+    // does) and an explicit empty array must be indistinguishable.
+    const defaulted = await runSkillAuditCheck(
+      ctx({ configRequired: ['a'], draftRequired: ['b'], invoked: ['x:a', 'x:b'] }),
+    );
+    const explicitEmpty = await runSkillAuditCheck(
+      ctx({ configRequired: ['a'], draftRequired: ['b'], invoked: ['x:a', 'x:b'] }),
+      [],
+    );
+    expect(defaulted).toEqual(explicitEmpty);
+    expect(explicitEmpty.effectiveRequired).toEqual(['a', 'b']);
+
+    // Compile-time proof for T2: `requiredWithProvenance` is assignable to
+    // `CadenceState['skillAudit']['provenance']` under
+    // `exactOptionalPropertyTypes`, so T2's direct
+    // `state.skillAudit.provenance = res.requiredWithProvenance` typechecks
+    // without relaxing the schema to `.nullable()` or adding a default. If the
+    // schema field ever stops accepting a concrete array, this stops compiling.
+    const forState: NonNullable<CadenceState['skillAudit']['provenance']> =
+      explicitEmpty.requiredWithProvenance;
+    expect(forState).toEqual([
+      { skill: 'a', source: 'config' },
+      { skill: 'b', source: 'draft' },
+    ]);
+
+    // Null config (load failed): still compute the narrower set — which on
+    // this path is DRAFT-only, since settle passes `[]` when config is null —
+    // but skip enforcement entirely. Never false-refuse, never emit.
+    const emits: EmitArg[] = [];
+    const errs: string[] = [];
+    const nullConfig = await runSkillAuditCheck(
+      ctx({ configRequired: null, draftRequired: ['tdd'], invoked: [], emits, errs }),
+      [],
+    );
+    expect(nullConfig.outcome).toBe('pass');
+    expect(nullConfig.effectiveRequired).toEqual(['tdd']);
+    expect(nullConfig.requiredWithProvenance).toEqual([{ skill: 'tdd', source: 'draft' }]);
+    expect(emits).toEqual([]);
+    expect(errs).toEqual([]);
+
+    // Nothing required at all → inert pass, empty provenance.
+    const inert = await runSkillAuditCheck(ctx({}), []);
+    expect(inert.outcome).toBe('pass');
+    expect(inert.effectiveRequired).toEqual([]);
+    expect(inert.requiredWithProvenance).toEqual([]);
   });
 });

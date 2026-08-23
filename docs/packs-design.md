@@ -1,18 +1,27 @@
 # CADENCE Packs — Design (v1, internal-first)
 
-> **Status: Slice 1 shipped (phase 290), zero behavioral effect.** As of
-> Slice 1, `config.packs` is parsed and resolved — `resolvePacks()`
+> **Status: Slice 1 shipped (phase 290); Slice 2 shipped (phase 291).** As
+> of Slice 1, `config.packs` is parsed and resolved — `resolvePacks()`
 > (`packages/core/src/packs/resolve.ts`) validates each enabled id's
 > `.cadence/packs/<id>/pack.json` against `PackManifestZ`
 > (`packages/types/src/pack.ts`), and `cadence doctor`'s `packs` check
-> surfaces whether each one resolves. **Nothing in gate computation reads a
-> pack yet** — `gatesFor`/`effectiveGateSet`
-> (`packages/core/src/gates/engine.ts`) have zero diff from before Slice 1,
-> proven by a structural no-coupling test — so no `skillAudit` requirement,
-> gate-profile delta, or slash-command declaration a manifest carries has
-> any effect. This document remains the design record for the whole arc;
-> §7 tracks which slice is done. It is intentionally **not** indexed in
-> `docs/README.md`.
+> surfaces whether each one resolves. As of Slice 2 a pack is a **real
+> behavioral contributor**: a resolved pack's `skillAudit.required` unions
+> into `runSkillAuditCheck`'s `effectiveRequired`
+> (`packages/core/src/checks/skill-audit.ts`) and refuses settle exactly
+> like a config- or DRAFT-declared requirement, with each requirement
+> attributed to `config` / `draft` / `pack:<id>` in `SUMMARY.json`'s
+> `skillAudit.provenance` (D-AS); an enabled-but-unresolvable pack is now a
+> hard settle-time refusal (`packages/core/src/checks/pack-resolution.ts`,
+> bypassable only via `--allow-unresolvable-pack`) and the `packs` doctor
+> check reports **`error`**, not Slice 1's `warning` (D-AR's two-phase plan,
+> phase two). **Gate computation still reads no pack** —
+> `gatesFor`/`effectiveGateSet` (`packages/core/src/gates/engine.ts`) remain
+> free of any `packs/` import, proven by a structural no-coupling test — so
+> a manifest's gate-profile delta (Slice 3) and slash-command declaration
+> (Slice 4) still have no effect. This document remains the design record
+> for the whole arc; §7 tracks which slice is done. It is intentionally
+> **not** indexed in `docs/README.md`.
 
 Scout: `scout-20260822-packs-design`. Precedes any implementation.
 
@@ -272,15 +281,19 @@ consumer.
 `cadence doctor` behavior is two-phase, recorded as one decision so the
 switchover isn't lost:
 
-- **Now (Slice 1, no behavioral effect anywhere else):** an enabled pack
-  that doesn't resolve is a **warning**. Nothing consumes packs
-  behaviorally yet, so there is nothing to fail loud about.
-- **Once a later slice makes packs behaviorally consumed** (Slice 2/3
-  below): an enabled-but-unresolvable pack becomes a **hard refusal** at
-  settle time, not a silent no-op. This follows the same precedent as
-  v1.64.0's zero-AC-drafts fix — "fail loud instead of passing every gate
-  vacuously." A silently-unresolvable pack is exactly "quietly disable what
-  the user installed it to get," the failure mode I-3 exists to prevent.
+- **Slice 1 (shipped, phase 290 — no behavioral effect anywhere else):** an
+  enabled pack that doesn't resolve was a **warning**. Nothing consumed
+  packs behaviorally yet, so there was nothing to fail loud about.
+- **Once a later slice makes packs behaviorally consumed — landed in Slice
+  2 (phase 291):** an enabled-but-unresolvable pack is now a **hard
+  refusal** at settle time (`checkUnresolvablePacks`, bypassable only via
+  the dedicated `--allow-unresolvable-pack`, which records the bypass in
+  `SUMMARY.gateBypasses`), not a silent no-op, and the `packs` doctor check
+  escalated from `warning` to `error` in the same phase. This follows the
+  same precedent as v1.64.0's zero-AC-drafts fix — "fail loud instead of
+  passing every gate vacuously." A silently-unresolvable pack is exactly
+  "quietly disable what the user installed it to get," the failure mode I-3
+  exists to prevent.
 
 ### D-AS — `skillAudit` provenance is recorded, not just the union
 
@@ -319,7 +332,7 @@ before/after for every existing fixture; no schema change to
 applies to this exactly the way it applies to CLI flags — decided now so
 it isn't discovered mid-implementation); full suite green.
 
-**Slice 2 — `skillAudit` contribution.**
+**Slice 2 — `skillAudit` contribution. Shipped (phase 291).**
 A pack's `skillAudit.required` unions into `effectiveRequired`
 (`runSkillAuditCheck`), with provenance (D-AS). First real behavioral
 consumer.

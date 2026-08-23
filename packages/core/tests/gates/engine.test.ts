@@ -336,9 +336,13 @@ describe('effectiveGateSet', () => {
 // Phase 290 T4 (AC-6) — zero-behavioral-effect regression proof: gate computation
 // is independent of pack resolution. This describe block provides two falsifiable
 // assertions: (a) that gatesFor()/effectiveGateSet() output is byte-identical
-// whether or not packs are enabled and resolved, and (b) that no file under
-// gates/ or services/ statically imports from packs/ — structural proof that
-// the two subsystems are decoupled.
+// whether or not packs are enabled and resolved, and (b) a structural coupling
+// check: gates/ stays fully decoupled from packs/ (zero imports, unchanged
+// since phase 290), while services/ has exactly one deliberate, asserted
+// consumer — settle.ts — which phase 291 (Slice 2) wires to `resolvePacks`
+// for the skill-audit union (T2) and the unresolvable-pack refusal (T3). Any
+// OTHER file under services/ importing from packs/ is still a failure;
+// gates/ itself is untouched until Slice 3.
 describe('290-01: pack resolution has zero behavioral effect on gate computation (AC-6)', () => {
   let active: Fixture | null = null;
   afterEach(async () => {
@@ -418,28 +422,36 @@ describe('290-01: pack resolution has zero behavioral effect on gate computation
     expect(new Set(effectiveSet.gates).size).toBe(effectiveSet.gates.length);
   });
 
-  it('290-01/AC-6: structural no-coupling assertion — no file in gates/ or services/ imports from packs/', () => {
+  it('291-01/AC-3: structural coupling assertion — gates/ stays zero-import, services/ has exactly one deliberate packs/ consumer (settle.ts)', () => {
     // Compute repo root: tests live at packages/core/tests/gates/engine.test.ts,
     // so four levels up.
     const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
     const gatesDir = join(repoRoot, 'packages/core/src/gates');
     const servicesDir = join(repoRoot, 'packages/core/src/services');
+    const settleTsPath = join(servicesDir, 'settle.ts');
 
-    const offendingFiles: string[] = [];
+    // gates/ and services/ are scanned and scored separately: gates/ keeps its
+    // pre-291 zero-imports bar unchanged (290-01/AC-6), while services/ is now
+    // allowed exactly one deliberate consumer of packs/ (settle.ts, wired in
+    // phase 291 Slice 2 T2) and fails if any OTHER services/ file also reaches
+    // into packs/.
+    const offendingGatesFiles: string[] = [];
+    const offendingServicesFiles: string[] = [];
     // A directory-walk failure (bad path, permissions, a moved directory)
     // must not silently produce a vacuous green — an unreached scan means
     // zero files examined, which is indistinguishable from "examined every
     // file, found nothing" unless something counts what was actually read.
     let filesScanned = 0;
 
-    // Recursively walk gatesDir and servicesDir, checking each .ts file.
-    const scanDir = (dir: string) => {
+    // Recursively walk a directory, checking each .ts file for a packs/
+    // import and pushing offenders into the given bucket.
+    const scanDir = (dir: string, offendingBucket: string[]) => {
       try {
         const entries = readdirSync(dir, { withFileTypes: true });
         for (const entry of entries) {
           const fullPath = join(dir, entry.name);
           if (entry.isDirectory()) {
-            scanDir(fullPath);
+            scanDir(fullPath, offendingBucket);
           } else if (entry.isFile() && entry.name.endsWith('.ts')) {
             filesScanned += 1;
             const content = readFileSync(fullPath, 'utf8');
@@ -477,7 +489,7 @@ describe('290-01: pack resolution has zero behavioral effect on gate computation
             const hasStaticPackImport = importStatements.some((s) => s.includes('/packs/'));
             const hasDynamicPackImport = /\bimport\s*\(\s*['"`][^'"`]*\/packs\//.test(content);
             if (hasStaticPackImport || hasDynamicPackImport) {
-              offendingFiles.push(fullPath);
+              offendingBucket.push(fullPath);
             }
           }
         }
@@ -486,17 +498,37 @@ describe('290-01: pack resolution has zero behavioral effect on gate computation
       }
     };
 
-    scanDir(gatesDir);
-    scanDir(servicesDir);
+    scanDir(gatesDir, offendingGatesFiles);
+    scanDir(servicesDir, offendingServicesFiles);
 
     // Guard against the scan itself silently finding nothing to look at.
     expect(filesScanned).toBeGreaterThan(0);
 
-    expect(offendingFiles).toEqual(
+    // gates/ (290-01/AC-6): unchanged, zero-tolerance bar — Slice 3's boundary,
+    // not touched by this phase.
+    expect(offendingGatesFiles).toEqual(
       [],
-      `Files in gates/ or services/ must not import from packs/. Found imports in: ${offendingFiles.join(
+      `Files in gates/ must not import from packs/. Found imports in: ${offendingGatesFiles.join(
         ', ',
       )}`,
     );
+
+    // services/ (291-01/AC-3): exactly one deliberate, asserted consumer —
+    // settle.ts. Any other services/ file importing from packs/ is a failure.
+    expect(offendingServicesFiles).toEqual(
+      [settleTsPath],
+      `services/ must have exactly one packs/ consumer (settle.ts). Found imports in: ${offendingServicesFiles.join(
+        ', ',
+      )}`,
+    );
+
+    // Falsifiable in both directions (same reasoning as the filesScanned
+    // guard above): if settle.ts's packs/ import is ever removed, this
+    // positive assertion fails rather than letting the test silently become
+    // stricter than intended (a services/ scan with zero offenders would
+    // otherwise pass the `toEqual([])`-shaped check just as easily as the
+    // real "exactly settle.ts" case).
+    const settleTsContent = readFileSync(settleTsPath, 'utf8');
+    expect(settleTsContent).toMatch(/from\s+['"`][^'"`]*\/packs\/resolve\.js['"`]/);
   });
 });

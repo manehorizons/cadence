@@ -1,0 +1,50 @@
+{
+  "draftId": "291-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "packages/core/src/checks/skill-audit.ts",
+        "packages/core/tests/checks/skill-audit.test.ts",
+        "packages/types/src/state.ts",
+        "packages/types/src/summary.ts",
+        "packages/core/tests/summary-skill-audit-provenance-schema.test.ts"
+      ],
+      "updatedAt": "2026-08-23T00:58:56.148Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "packages/core/src/services/settle.ts",
+        "packages/core/tests/cli/settle-skill-audit.test.ts",
+        "packages/core/tests/gates/engine.test.ts"
+      ],
+      "updatedAt": "2026-08-23T01:15:06.273Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "packages/core/src/cli/commands/settle.ts",
+        "packages/core/src/gates/types.ts",
+        "packages/core/src/checks/pack-resolution.ts",
+        "packages/core/tests/checks/pack-resolution.test.ts"
+      ],
+      "updatedAt": "2026-08-23T01:34:56.254Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "docs/packs-design.md",
+        "docs/reference/commands.md",
+        "packages/core/src/doctor/run.ts",
+        "packages/core/tests/doctor/packs.test.ts",
+        ".changeset/packs-slice-2-skill-audit-provenance.md"
+      ],
+      "updatedAt": "2026-08-23T01:50:19.583Z"
+    }
+  }
+}

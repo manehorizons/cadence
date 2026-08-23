@@ -60,7 +60,7 @@ describe('checkPacks — cadence doctor pack-resolution check', () => {
     expect(c.remediation).toBeNull();
   });
 
-  it('290-01/AC-4: a mix of resolved and unresolved enabled packs warns (never errors) and names BOTH sides', async () => {
+  it('291-01/AC-5: a mix of resolved and unresolved enabled packs errors (escalated from slice 1 warning) and names BOTH sides', async () => {
     active = await tempRepo({ initialized: true });
     await seedPack(active.root, 'cadence/resolves-fine');
     await setPacks(active.root, {
@@ -70,10 +70,13 @@ describe('checkPacks — cadence doctor pack-resolution check', () => {
 
     const c = await checkPacks(active.root);
     expect(c.name).toBe('packs');
-    // Slice 1 is warning-only by dec-20260822-025 — nothing consumes packs
-    // behaviorally yet, so an unresolved pack breaks nothing today.
-    expect(c.severity).toBe('warning');
-    expect(c.severity).not.toBe('error');
+    // Slice 2 (phase 291) completes dec-20260822-025's two-phase plan: packs
+    // are now behaviorally consumed (skillAudit union + the settle-time
+    // `checkUnresolvablePacks` refusal), so an unresolved enabled pack is a
+    // real failure, not a cosmetic one. Assert the negative too, so a silent
+    // regression back to slice 1's warning rung fails here.
+    expect(c.severity).toBe('error');
+    expect(c.severity).not.toBe('warning');
     // The detail lists the failure AND the success — not just the failure.
     expect(c.detail).toContain('cadence/never-installed');
     expect(c.detail).toContain('cadence/resolves-fine');
@@ -96,7 +99,7 @@ describe('checkPacks — cadence doctor pack-resolution check', () => {
     expect(c.remediation).toBeNull();
   });
 
-  it('290-01/AC-4: warns when NO enabled pack resolves, saying so explicitly rather than emitting an empty resolved list', async () => {
+  it('291-01/AC-5: errors when NO enabled pack resolves, saying so explicitly rather than emitting an empty resolved list', async () => {
     active = await tempRepo({ initialized: true });
     // No manifest seeded at all — the common real-world shape: an operator
     // adds an id to packs.enabled and never creates the manifest.
@@ -104,13 +107,13 @@ describe('checkPacks — cadence doctor pack-resolution check', () => {
 
     const c = await checkPacks(active.root);
     expect(c.name).toBe('packs');
-    expect(c.severity).toBe('warning');
+    expect(c.severity).toBe('error');
     expect(c.detail).toContain('cadence/never-installed');
     expect(c.detail).toContain('No enabled pack resolved');
     expect(c.remediation).toBeTruthy();
   });
 
-  it('290-01/AC-4: degrades to ok (never a fabricated warning) when config.json cannot be loaded — checkInitialized already reports that as error', async () => {
+  it('290-01/AC-4: degrades to ok (never a fabricated failure) when config.json cannot be loaded — checkInitialized already reports that as error', async () => {
     active = await tempRepo({ initialized: true });
     // Malformed JSON is what actually makes `loadConfig` throw: a *missing*
     // config.json returns `defaultConfig` instead, which would exercise the

@@ -1291,30 +1291,33 @@ export async function checkCoverageModeLanguageSupport(root: string): Promise<Do
 
 /**
  * Report whether every enabled pack in `config.packs` actually resolves to a
- * schema-valid `.cadence/packs/<id>/pack.json` on disk (phase 290, slice 1).
- * Read-only and purely observational: this check is the ONLY place packs are
- * surfaced at all in this slice — nothing in gate computation
- * (`gatesFor`/`effectiveGateSet`) reads a pack yet.
+ * schema-valid `.cadence/packs/<id>/pack.json` on disk (phase 290, slice 1;
+ * escalated in phase 291, slice 2). Read-only and purely observational
+ * itself — it reports a condition, it does not enforce one.
  *
- * **Why `warning` and not `error` — do not "fix" this into an error.**
- * `dec-20260822-025` (recorded as `docs/packs-design.md` §6 D-AR) locks a
- * deliberate two-phase plan:
+ * **Why `error` (phase 291) where slice 1 deliberately used `warning`.**
+ * `dec-20260822-025` (recorded as `docs/packs-design.md` §6 D-AR) locked a
+ * deliberate two-phase plan, and **phase 291 is that second phase — the
+ * escalation has landed.** Slice 1's `warning` was correct *because nothing
+ * consumed a pack behaviorally*: failing `DoctorReport.ok` over a condition
+ * with zero actual consequence is its own flavor of dishonest gating. That
+ * premise no longer holds:
  *
- * - **Now (slice 1):** an enabled-but-unresolvable pack is a **warning**.
- *   Nothing consumes packs behaviorally, so an unresolved pack breaks
- *   nothing today — reporting it as `error` would fail `DoctorReport.ok`
- *   over a condition with zero actual consequence, which is its own flavor
- *   of dishonest gating.
- * - **Once a later slice makes packs behaviorally consumed** (design doc
- *   slices 2/3): an enabled-but-unresolvable pack becomes a **hard refusal
- *   at settle time**, following v1.64.0's "fail loud instead of passing
- *   every gate vacuously" precedent — a silently-unresolvable pack would
- *   otherwise quietly disable exactly what the operator installed it to get
- *   (the failure mode invariant I-3 exists to prevent).
+ * - `runSkillAuditCheck` (`../checks/skill-audit.ts`) now unions each
+ *   resolved pack's `skillAudit.required` into `effectiveRequired`, so a
+ *   pack that fails to resolve silently drops the requirements the operator
+ *   installed it to get — the exact "quietly disable what the user asked
+ *   for" failure mode invariant I-3 exists to prevent.
+ * - `checkUnresolvablePacks` (`../checks/pack-resolution.ts`) makes the same
+ *   condition a **hard refusal at settle time**, bypassable only via the
+ *   explicit `--allow-unresolvable-pack`.
  *
- * The escalation belongs to that later slice's settle-time refusal, not to
- * this check's severity rung. Raising it here early would fire on repos
- * where the condition is still inert.
+ * So an unresolved enabled pack is now a real, consequential failure, and
+ * `error` is the honest rung: doctor must not report a repo as healthy over
+ * a condition that will refuse its next settle. (Gate *computation* —
+ * `gatesFor`/`effectiveGateSet` — still reads no pack; that is slice 3. The
+ * escalation is justified by skill-audit enforcement plus the settle-time
+ * refusal, not by gate deltas.)
  *
  * The `catch` degrades to `pass()` rather than `dec-20260810-005`'s
  * `indeterminate` rung **deliberately**, sharing the same justification as
@@ -1367,14 +1370,14 @@ export async function checkPacks(root: string): Promise<DoctorCheck> {
     );
   }
 
-  // Name BOTH sides: a mixed list is still the warning case, but the operator
+  // Name BOTH sides: a mixed list is still the failure case, but the operator
   // needs to know which packs are fine as well as which are not.
   const brokenDetail = broken.map((p) => `${p.id} — ${p.error}`).join('; ');
   const okDetail =
     ok.length > 0 ? ` Resolved: ${ok.map((p) => p.id).join(', ')}.` : ' No enabled pack resolved.';
   return fail(
     'packs',
-    'warning',
+    'error',
     `${broken.length} of ${resolved.length} enabled pack(s) did not resolve: ${brokenDetail}.${okDetail}`,
     'Add the missing manifest at .cadence/packs/<id>/pack.json (or fix the reported error), or remove the id from `packs.enabled` in .cadence/config.json.',
   );

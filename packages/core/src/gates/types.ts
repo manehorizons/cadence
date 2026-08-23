@@ -201,6 +201,8 @@ export interface SettleOpts {
   readonly allowSkillAuditMiss?: boolean;
   /** --allow-boundary-scan-failure (Phase 156, boundary-scan gate). */
   readonly allowBoundaryScanFailure?: boolean;
+  /** --allow-unresolvable-pack (Phase 291, pack-resolution check). */
+  readonly allowUnresolvablePack?: boolean;
 }
 
 /** Everything a gate may read. Built once, before the gate loop. Readonly. */
